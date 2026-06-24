@@ -1,122 +1,112 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useEffect, useState } from 'react';
+import { supabase } from './lib/supabaseClient'; 
+import { usePartner } from './context/PartnerContext';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Import Onboarding Views
+import DetailsPendingView from './views/Onboarding/DetailsPendingView';
+import CompliancePendingView from './views/Onboarding/CompliancePendingView';
+import AgreementView from './views/Onboarding/AgreementView';
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+// Import Review View
+import UnderReviewView from './views/Review/UnderReviewView';
+
+// Import Portal Views
+import ActiveDashboardView from './views/Portal/ActiveDashboardView';
+
+export default function App() {
+  const { partner, loading, refreshPartnerStatus } = usePartner();
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // If the context is fetching the initial session or partner row, show a clean loading state
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p style={{ fontFamily: 'goch_hand' }}>Loading...</p>
+      </div>
+    );
+  }
+
+  // If no authenticated user or partner profile exists, show a standard fallback/login placeholder
+  if (!partner) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p style={{ fontFamily: 'goch_hand' }}>Please sign in to access the partner portal.</p>
+      </div>
+    );
+  }
+
+  // Handle the transition from "approved" to "active" upon entering the portal
+  const handleEnterPortal = async () => {
+    setUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from('partners')
+        .update({ status: 'active' })
+        .eq('id', partner.id);
+
+      if (error) throw error;
+      
+      // Refresh the context state so it flips to the 'active' dashboard view immediately
+      await refreshPartnerStatus();
+    } catch (err) {
+      console.error('Error updating status to active:', err);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  // Database-driven onboarding and compliance view switching logic
+  switch (partner.status) {
+    case 'details_pending':
+      return <DetailsPendingView />;
+
+    case 'compliance_pending':
+      return <CompliancePendingView />;
+
+    case 'under_review':
+      return <UnderReviewView />;
+
+    case 'approved':
+      // Welcome to FoodHub screen gate logic
+      return (
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          padding: '20px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{ fontFamily: 'goch_hand', fontSize: '2.5rem', marginBottom: '16px' }}>
+            Welcome to FoodHub
+          </h1>
+          <p style={{ marginBottom: '24px', maxWidth: '400px' }}>
+            Your partner venue registration has been approved! You are ready to open your portal dashboard.
           </p>
+          <button
+            onClick={handleEnterPortal}
+            disabled={updatingStatus}
+            style={{
+              padding: '12px 24px',
+              fontSize: '1rem',
+              cursor: updatingStatus ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {updatingStatus ? 'Opening Portal...' : 'Enter Portal'}
+          </button>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      );
 
-      <div className="ticks"></div>
+    case 'active':
+      return <ActiveDashboardView />;
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+    default:
+      // Fallback screen for safety in case status is undefined or unexpected
+      return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <p style={{ fontFamily: 'goch_hand' }}>Account status error. Please contact support.</p>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      );
+  }
 }
-
-export default App
