@@ -21,7 +21,6 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
   // Step 2: Compliance Verification States
   const [isCheckingHygiene, setIsCheckingHygiene] = useState(false);
   const [hygieneVerified, setHygieneVerified] = useState(false);
-  const [hygieneRating, setHygieneRating] = useState<string | null>(null);
 
   // Upload Tracking States
   const [idFile, setIdFile] = useState<File | null>(null);
@@ -51,7 +50,6 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
 
       if (data && data.hygiene_provided) {
         setHygieneVerified(true);
-        setHygieneRating("Verified"); 
       }
     } catch (err) {
       console.error("Error verifying automated hygiene record:", err);
@@ -70,7 +68,7 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
         .from('partners')
         .update({
           name,
-          cuisine_type: cuisineType, // Correct spelling matching table definitions
+          cuisine_type: cuisineType,
           tel_number: telNumber,
           address1,
           address2: address2 || null,
@@ -109,9 +107,10 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
     setGeneralError(null);
 
     try {
-      const idPath = await uploadFileToBucket(idFile, 'compliance-docs', `${partnerId}/id_proof_${Date.now()}`);
-      const insurancePath = await uploadFileToBucket(insuranceFile, 'compliance-docs', `${partnerId}/insurance_${Date.now()}`);
-      const menuPath = await uploadFileToBucket(menuFile, 'venue-media', `${partnerId}/menu_${Date.now()}`);
+      // Resolved unused variable warnings by executing them directly or mapping references
+      await uploadFileToBucket(idFile, 'compliance-docs', `${partnerId}/id_proof_${Date.now()}`);
+      await uploadFileToBucket(insuranceFile, 'compliance-docs', `${partnerId}/insurance_${Date.now()}`);
+      await uploadFileToBucket(menuFile, 'venue-media', `${partnerId}/menu_${Date.now()}`);
 
       const { error } = await supabase
         .from('partners')

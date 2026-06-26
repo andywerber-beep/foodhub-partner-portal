@@ -1,5 +1,6 @@
 import React from 'react';
-import { VenueDetailsForm } from '../../components/onboarding/VenueDetailsForm';
+// Changed path to import directly from the same folder
+import { VenueDetailsForm } from './VenueDetailsForm';
 
 export const DetailsPendingView: React.FC = () => {
   return (

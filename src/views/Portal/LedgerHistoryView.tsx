@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { usePartner } from '../../context/PartnerContext';
-import { supabase } from '../../lib/supabaseClient';
 
 interface Transaction {
   id: string;
