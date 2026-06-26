@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePartner } from '../../context/PartnerContext';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 interface CombinedItem {
   id: string;
@@ -128,7 +128,7 @@ export function MenuManager() {
             name,
             description,
             price: parseFloat(price),
-            offer_price: offerPrice ? parseFloat(offerPrice) : parseFloat(price) * 0.9, // Default fallback to 10% off if blank
+            offer_price: offerPrice ? parseFloat(offerPrice) : parseFloat(price) * 0.9,
             category
           }]);
         if (error) throw error;
@@ -151,7 +151,6 @@ export function MenuManager() {
       setPrice('');
       setIsLiveOffer(false);
       setOfferPrice('');
-      // Real-time listener handles the fetch call automatically from here!
     } catch (err) {
       console.error('Error inserting item registry:', err);
     }

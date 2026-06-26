@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePartner } from '../../context/PartnerContext';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 interface Transaction {
   id: string;
@@ -38,7 +38,6 @@ export const LedgerHistoryView: React.FC = () => {
         {
           id: 'TX-8974',
           created_at: new Date(2026, 5, 21, 18, 45).toLocaleString(),
-          employee_name: 'Sarah Jenkins', // Note: Using regular customer context internally
           customer_name: 'Sarah Jenkins',
           item_purchased: 'Truffle Fries & Drink',
           gross_amount: 9.50,
@@ -47,7 +46,7 @@ export const LedgerHistoryView: React.FC = () => {
         },
         {
           id: 'TX-8841',
-          created_at: new Date(2026, 5, 20, 13, 2).toLocaleString(), // Fixed octal literal typo here
+          created_at: new Date(2026, 5, 20, 13, 2).toLocaleString(),
           customer_name: 'David Ross',
           item_purchased: 'Gourmet Mains Deal',
           gross_amount: 22.00,

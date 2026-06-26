@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from './supabaseClient'; 
+import { useState } from 'react';
+import { supabase } from './lib/supabaseClient'; 
 import { usePartner } from './context/PartnerContext';
 
-// Import Onboarding Views
-import DetailsPendingView from './views/Onboarding/DetailsPendingView';
-import CompliancePendingView from './views/Onboarding/CompliancePendingView';
+// Import Onboarding Views (Named Exports wrapped in brackets)
+import { DetailsPendingView } from './views/Onboarding/DetailsPendingView';
+import { CompliancePendingView } from './views/Onboarding/CompliancePendingView';
 
 // Import Review View
-import UnderReviewView from './views/Review/UnderReviewView';
+import { UnderReviewView } from './views/Review/UnderReviewView';
 
 // Import Portal Views
 import ActiveDashboardView from './views/Portal/ActiveDashboardView';

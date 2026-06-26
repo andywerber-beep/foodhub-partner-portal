@@ -29,15 +29,15 @@ serve(async (req) => {
       })
     }
 
-    -- 1. Insert the log entry directly to kick off the 15-minute cooldown cache
+    // 1. Insert the log entry directly to kick off the 15-minute cooldown cache
     const { error: logError } = await supabaseClient
       .from('proximity_ping_logs')
       .insert([{ user_id: userId, partner_id: partnerId }])
 
     if (logError) throw logError
 
-    -- 2. Dispatch payload to physical device notification servers (Firebase/FCM example stub)
-    -- In a live environment, you would swap this payload with your direct Firebase or Expo access tokens.
+    // 2. Dispatch payload to physical device notification servers (Firebase/FCM example stub)
+    // In a live environment, you would swap this payload with your direct Firebase or Expo access tokens.
     const fcmPayload = {
       to: `/topics/user_${userId}`,
       notification: {
@@ -46,18 +46,6 @@ serve(async (req) => {
         sound: "default"
       }
     }
-
-    // Example fetch invocation to downstream hardware delivery gateway
-    /*
-    await fetch('https://fcm.googleapis.com/fcm/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `key=${Deno.env.get('FIREBASE_SERVER_KEY')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(fcmPayload)
-    });
-    */
 
     return new Response(JSON.stringify({ success: true, logged: true, dispatched: fcmPayload.notification }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
