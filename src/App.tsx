@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from './lib/supabaseClient'; 
-import { usePartner } from './context/PartnerContext';
+import { PartnerProvider, usePartner } from './context/PartnerContext';
 
 // Import Onboarding Views (Named Exports wrapped in brackets)
 import { DetailsPendingView } from './views/Onboarding/DetailsPendingView';
@@ -12,7 +12,8 @@ import { UnderReviewView } from './views/Review/UnderReviewView';
 // Import Portal Views
 import ActiveDashboardView from './views/Portal/ActiveDashboardView';
 
-export default function App() {
+// Inner component that handles all the database-driven route switching
+function MainAppContent() {
   const { partner, loading, refreshPartnerStatus } = usePartner();
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -108,4 +109,13 @@ export default function App() {
         </div>
       );
   }
+}
+
+// Default export wraps the app components safely inside the provider context
+export default function App() {
+  return (
+    <PartnerProvider>
+      <MainAppContent />
+    </PartnerProvider>
+  );
 }
