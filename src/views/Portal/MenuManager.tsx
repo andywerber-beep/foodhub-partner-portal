@@ -57,7 +57,7 @@ export function MenuManager() {
         id: o.id.toString(),
         name: o.name,
         description: o.description || '',
-        price: parseFloat(o.base_price || o.price),
+        price: parseFloat(o.price),
         category: o.category || 'Mains',
         isLiveOffer: true,
         offerPrice: parseFloat(o.offer_price),
@@ -127,8 +127,8 @@ export function MenuManager() {
             venue_id: partner.id,
             name,
             description,
-            base_price: parseFloat(price),
-            offer_price: offerPrice ? parseFloat(offerPrice) : parseFloat(price) * 0.8,
+            price: parseFloat(price),
+            offer_price: offerPrice ? parseFloat(offerPrice) : parseFloat(price) * 0.9, // Default fallback to 10% off if blank
             category
           }]);
         if (error) throw error;

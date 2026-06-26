@@ -5,10 +5,10 @@ import { supabase } from '../../supabaseClient';
 interface Transaction {
   id: string;
   created_at: string;
-  employee_name: string;
+  customer_name: string;
   item_purchased: string;
   gross_amount: number;
-  commission_deducted: number;
+  commission_amount: number;
   net_payout: number;
 }
 
@@ -29,28 +29,29 @@ export const LedgerHistoryView: React.FC = () => {
         {
           id: 'TX-9021',
           created_at: new Date(2026, 5, 22, 12, 14).toLocaleString(),
-          employee_name: 'Alex Mercer',
+          customer_name: 'Alex Mercer',
           item_purchased: 'Classic Burger Combo',
           gross_amount: 15.00,
-          commission_deducted: 1.50,
+          commission_amount: 1.50,
           net_payout: 13.50,
         },
         {
           id: 'TX-8974',
           created_at: new Date(2026, 5, 21, 18, 45).toLocaleString(),
-          employee_name: 'Sarah Jenkins',
+          employee_name: 'Sarah Jenkins', // Note: Using regular customer context internally
+          customer_name: 'Sarah Jenkins',
           item_purchased: 'Truffle Fries & Drink',
           gross_amount: 9.50,
-          commission_deducted: 0.95,
+          commission_amount: 0.95,
           net_payout: 8.55,
         },
         {
           id: 'TX-8841',
-          created_at: new Date(2026, 5, 20, 13, 02).toLocaleString(),
-          employee_name: 'David Ross',
+          created_at: new Date(2026, 5, 20, 13, 2).toLocaleString(), // Fixed octal literal typo here
+          customer_name: 'David Ross',
           item_purchased: 'Gourmet Mains Deal',
           gross_amount: 22.00,
-          commission_deducted: 2.20,
+          commission_amount: 2.20,
           net_payout: 19.80,
         }
       ];
@@ -79,7 +80,7 @@ export const LedgerHistoryView: React.FC = () => {
       <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: '11px', background: 'rgba(76, 209, 55, 0.1s)', color: '#4CD137', padding: '4px 8px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '11px', background: 'rgba(76, 209, 55, 0.1)', color: '#4CD137', padding: '4px 8px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>
               Subscription Paid Upfront
             </span>
             <h3 style={{ fontSize: '20px', fontWeight: 600, margin: '12px 0 6px 0' }}>Platform Workspace License</h3>
@@ -119,10 +120,10 @@ export const LedgerHistoryView: React.FC = () => {
                   <tr key={tx.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '16px 8px', fontWeight: 700, color: 'var(--text-secondary)' }}>{tx.id}</td>
                     <td style={{ padding: '16px 8px', color: 'var(--text-secondary)' }}>{tx.created_at}</td>
-                    <td style={{ padding: '16px 8px', fontWeight: 600 }}>{tx.employee_name}</td>
+                    <td style={{ padding: '16px 8px', fontWeight: 600 }}>{tx.customer_name}</td>
                     <td style={{ padding: '16px 8px', color: 'var(--text-secondary)' }}>{tx.item_purchased}</td>
                     <td style={{ padding: '16px 8px', fontWeight: 600 }}>£{tx.gross_amount.toFixed(2)}</td>
-                    <td style={{ padding: '16px 8px', color: 'var(--coral-accent)', fontWeight: 600 }}>-£{tx.commission_deducted.toFixed(2)}</td>
+                    <td style={{ padding: '16px 8px', color: 'var(--coral-accent)', fontWeight: 600 }}>-£{tx.commission_amount.toFixed(2)}</td>
                     <td style={{ padding: '16px 8px', color: '#4CD137', fontWeight: 700, textAlign: 'right' }}>£{tx.net_payout.toFixed(2)}</td>
                   </tr>
                 ))}

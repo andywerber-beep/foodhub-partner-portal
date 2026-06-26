@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from './lib/supabaseClient'; 
+import { supabase } from './supabaseClient'; 
 import { usePartner } from './context/PartnerContext';
 
 // Import Onboarding Views
 import DetailsPendingView from './views/Onboarding/DetailsPendingView';
 import CompliancePendingView from './views/Onboarding/CompliancePendingView';
-import AgreementView from './views/Onboarding/AgreementView';
 
 // Import Review View
 import UnderReviewView from './views/Review/UnderReviewView';
