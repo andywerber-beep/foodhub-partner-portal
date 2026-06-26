@@ -1,6 +1,6 @@
 import React from 'react';
-// Changed path to import directly from the same folder
-import { VenueDetailsForm } from './VenueDetailsForm';
+// Removed the curly braces to correctly import the default export
+import VenueDetailsForm from './VenueDetailsForm';
 
 export const DetailsPendingView: React.FC = () => {
   return (
@@ -14,7 +14,11 @@ export const DetailsPendingView: React.FC = () => {
         </p>
       </header>
 
-      <VenueDetailsForm />
+      <VenueDetailsForm 
+        partnerId="" 
+        currentStatus="details_pending" 
+        onStatusUpdate={() => {}} 
+      />
     </div>
   );
 };
