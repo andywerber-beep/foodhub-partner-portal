@@ -1,20 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Replace these with your actual TypeScript definitions if you have generated them via Supabase CLI
-// e.g., import { Database } from '../types/supabase';
 type Database = any; 
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// TEMPORARY BYPASS: Hardcode your real credentials directly
+const supabaseUrl = " https://lhasptyhdyybbdphyrrm.supabase.co/rest/v1";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoYXNwdHloZHl5YmJkcGh5cnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NzQ0NDksImV4cCI6MjA5NzM1MDQ0OX0.uDiGgYzTZvvqOti3wJwNyRGX5-kW44ArL_ei9Sc99T4";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(
-    'Missing Supabase environment variables. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env file.'
+    'Missing Supabase environment variables.'
   );
 }
 
-// Creating the single, shared client instance across your Brighton project
-export const supabase = createClient<Database>(
-  supabaseUrl || '',
-  supabaseAnonKey || ''
-);
+// Creating the single, shared client instance across your project
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
