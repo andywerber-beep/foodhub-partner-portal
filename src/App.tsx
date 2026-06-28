@@ -19,6 +19,7 @@ function MainAppContent() {
   // Auth Form States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // Restored toggle state
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -82,7 +83,23 @@ function MainAppContent() {
 
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase' }}>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', background: '#121214', border: '1px solid #2e2e34', borderRadius: '6px', padding: '12px', color: '#fff', boxSizing: 'border-box', fontSize: '15px' }} placeholder="••••••••" />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                  style={{ width: '100%', background: '#121214', border: '1px solid #2e2e34', borderRadius: '6px', padding: '12px', paddingRight: '50px', color: '#fff', boxSizing: 'border-box', fontSize: '15px' }} 
+                  placeholder="••••••••" 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--coral-accent, #db4455)', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             <button type="submit" disabled={authLoading} style={{ width: '100%', background: 'var(--coral-accent, #db4455)', color: '#fff', border: 'none', borderRadius: '6px', padding: '14px', fontWeight: 600, cursor: authLoading ? 'not-allowed' : 'pointer', fontSize: '16px', marginTop: '8px', transition: 'background 0.2s' }}>
