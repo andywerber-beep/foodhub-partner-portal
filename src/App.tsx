@@ -24,7 +24,6 @@ function MainAppContent() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  // Safely toggle screens and wipe out freezing error banners instantly
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
     setAuthError(null);
@@ -40,16 +39,33 @@ function MainAppContent() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
+        // 1. Create the auth user profile
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({ email, password });
+        if (signUpError) throw signUpError;
         
-        // Forces frontend app state engine to update instantly upon signup
+        if (authData?.user) {
+          // 2. Automatically create the required partner row so the router doesn't crash or loop
+          const { error: insertError } = await supabase
+            .from('partners')
+            .insert([
+              { 
+                id: authData.user.id, // Links directly to auth user ID
+                email: email,
+                status: 'details_pending', // Sets initial state machine phase
+                id_provided: false,
+                hygiene_provided: false,
+                insurance_provided: false
+              }
+            ]);
+            
+          if (insertError) throw insertError;
+        }
+
         await refreshPartnerStatus();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         
-        // Refresh context status upon sign in
         await refreshPartnerStatus();
       }
     } catch (err: any) {
@@ -59,7 +75,6 @@ function MainAppContent() {
     }
   };
 
-  // 1. Initial Data/Session loading screen
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background-dark)', color: 'var(--text-primary)' }}>
@@ -68,7 +83,6 @@ function MainAppContent() {
     );
   }
 
-  // 2. If no user session exists, render the clean login/signup interface
   if (!partner) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#121214', padding: '20px' }}>
@@ -107,7 +121,7 @@ function MainAppContent() {
                 />
                 <button 
                   type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
+                  onClick={() => { setShowPassword(!showPassword); }} 
                   style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--coral-accent, #db4455)', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                 >
                   {showPassword ? 'Hide' : 'Show'}
@@ -130,7 +144,6 @@ function MainAppContent() {
     );
   }
 
-  // Handle transitioning from approved -> active status
   const handleEnterPortal = async () => {
     setUpdatingStatus(true);
     try {
@@ -148,7 +161,6 @@ function MainAppContent() {
     }
   };
 
-  // 3. Status Switcher Matrix
   switch (partner.status) {
     case 'details_pending':
       return <DetailsPendingView />;
