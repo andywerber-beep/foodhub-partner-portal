@@ -19,10 +19,18 @@ function MainAppContent() {
   // Auth Form States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // Restored toggle state
+  const [showPassword, setShowPassword] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+
+  // Safely toggle screens and wipe out freezing error banners instantly
+  const toggleAuthMode = () => {
+    setIsSignUp(!isSignUp);
+    setAuthError(null);
+    setEmail('');
+    setPassword('');
+  };
 
   // Handle Supabase Authentication
   const handleAuth = async (e: React.FormEvent) => {
@@ -35,7 +43,7 @@ function MainAppContent() {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         
-        // Dynamic Refresh: Forces frontend app state engine to update instantly upon signup
+        // Forces frontend app state engine to update instantly upon signup
         await refreshPartnerStatus();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -113,7 +121,7 @@ function MainAppContent() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '24px', borderTop: '1px solid #2e2e34', paddingTop: '20px' }}>
-            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(null); }} style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer', fontSize: '14px', textDecoration: 'underline' }}>
+            <button type="button" onClick={toggleAuthMode} style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer', fontSize: '14px', textDecoration: 'underline' }}>
               {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Register here"}
             </button>
           </div>
