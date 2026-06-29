@@ -24,6 +24,7 @@ function MainAppContent() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
 
+  // Wipes form errors instantly when swapping screens to prevent layout lockups
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
     setAuthError(null);
@@ -31,7 +32,7 @@ function MainAppContent() {
     setPassword('');
   };
 
-  // Handle Supabase Authentication
+  // Handle Supabase Authentication Pipeline
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthLoading(true);
@@ -39,19 +40,20 @@ function MainAppContent() {
 
     try {
       if (isSignUp) {
-        // 1. Create the auth user profile
+        // 1. Create the system authentication user profile
         const { data: authData, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) throw signUpError;
         
+        // 2. Safely verify the user was generated on the server
         if (authData?.user) {
-          // 2. Automatically create the required partner row so the router doesn't crash or loop
+          // 3. Automated Row Creation: Instantly builds their venue tracker profile
           const { error: insertError } = await supabase
             .from('partners')
             .insert([
               { 
-                id: authData.user.id, // Links directly to auth user ID
+                id: authData.user.id, // Maps natively to the unique security ID
                 email: email,
-                status: 'details_pending', // Sets initial state machine phase
+                status: 'details_pending', // Begins state machine at initial block
                 id_provided: false,
                 hygiene_provided: false,
                 insurance_provided: false
@@ -61,8 +63,10 @@ function MainAppContent() {
           if (insertError) throw insertError;
         }
 
+        // 4. Update the core app engine to switch screens instantly
         await refreshPartnerStatus();
       } else {
+        // Handle standard login checks
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         
@@ -75,6 +79,7 @@ function MainAppContent() {
     }
   };
 
+  // 1. Core verification check block
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background-dark)', color: 'var(--text-primary)' }}>
@@ -83,6 +88,7 @@ function MainAppContent() {
     );
   }
 
+  // 2. Main Gateway Auth Interface
   if (!partner) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#121214', padding: '20px' }}>
@@ -144,6 +150,7 @@ function MainAppContent() {
     );
   }
 
+  // Handle portal transition state update logic
   const handleEnterPortal = async () => {
     setUpdatingStatus(true);
     try {
@@ -161,6 +168,7 @@ function MainAppContent() {
     }
   };
 
+  // Onboarding routing switcher matrix
   switch (partner.status) {
     case 'details_pending':
       return <DetailsPendingView />;
