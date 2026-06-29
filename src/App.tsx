@@ -34,10 +34,15 @@ function MainAppContent() {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        alert('Registration successful! Check your email for a verification link, or try signing in.');
+        
+        // Dynamic Refresh: Forces frontend app state engine to update instantly upon signup
+        await refreshPartnerStatus();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        // Refresh context status upon sign in
+        await refreshPartnerStatus();
       }
     } catch (err: any) {
       setAuthError(err.message || 'Authentication failed.');
