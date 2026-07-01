@@ -8,7 +8,7 @@ interface VenueDetailsFormProps {
 }
 
 export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpdate }: VenueDetailsFormProps) {
-  // Step 1: Details Pending States
+  // Step 1: Details States
   const [name, setName] = useState('');
   const [cuisineType, setCuisineType] = useState('');
   const [telNumber, setTelNumber] = useState('');
@@ -17,6 +17,10 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
   const [town, setTown] = useState('');
   const [postcode, setPostcode] = useState('');
   const [email, setEmail] = useState('');
+
+  // Core Compliance Flags from DB
+  const [dbIdProvided, setDbIdProvided] = useState(false);
+  const [dbInsuranceProvided, setDbInsuranceProvided] = useState(false);
 
   // Step 2: Compliance Verification States
   const [isCheckingHygiene, setIsCheckingHygiene] = useState(false);
@@ -31,11 +35,42 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  // Fetch current database fields on mount or status rollback to ensure re-uploads target the correct missing gaps
   useEffect(() => {
-    if (currentStatus === 'compliance_pending') {
-      checkBackendHygieneStatus();
+    fetchExistingPartnerData();
+  }, [partnerId, currentStatus]);
+
+  const fetchExistingPartnerData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('partners')
+        .select('*')
+        .eq('id', partnerId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setName(data.name || '');
+        setCuisineType(data.cuisine_type || '');
+        setTelNumber(data.tel_number || '');
+        setAddress1(data.address1 || '');
+        setAddress2(data.address2 || '');
+        setTown(data.town || '');
+        setPostcode(data.postcode || '');
+        setEmail(data.email || '');
+        setDbIdProvided(data.id_provided || false);
+        setDbInsuranceProvided(data.insurance_provided || false);
+        setInsuranceExpiry(data.insurance_expiry || '');
+        
+        if (data.hygiene_provided) {
+          setHygieneVerified(true);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading partner record profile context:", err);
     }
-  }, [currentStatus]);
+  };
 
   const checkBackendHygieneStatus = async () => {
     setIsCheckingHygiene(true);
@@ -63,7 +98,25 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
     setIsSubmitting(true);
     setGeneralError(null);
 
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
     try {
+      // 1. Geocode full address using official browser endpoint pipelines
+      const formattedAddress = encodeURIComponent(`${address1}, ${town}, ${postcode}`);
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${formattedAddress}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
+      
+      const geoResponse = await fetch(geocodeUrl);
+      const geoData = await geoResponse.json();
+
+      if (geoData.status === 'OK' && geoData.results?.[0]?.geometry?.location) {
+        latitude = geoData.results[0].geometry.location.lat;
+        longitude = geoData.results[0].geometry.location.lng;
+      } else {
+        console.warn(`⚠️ Geocoding failed with status: ${geoData.status}. Falling back to clean record updates.`);
+      }
+
+      // 2. Commit complete profile dataset along with coordinates down into Supabase
       const { error } = await supabase
         .from('partners')
         .update({
@@ -75,6 +128,8 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
           town,
           postcode,
           email,
+          latitude,
+          longitude,
           status: 'compliance_pending'
         })
         .eq('id', partnerId);
@@ -98,8 +153,22 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
 
   const handleSaveComplianceAndMedia = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!idFile || !insuranceFile || !menuFile || !insuranceExpiry) {
-      setGeneralError("Please provide all required ID, Insurance documents, and Menu images.");
+    
+    // Validate uploads depending on whether database needs them re-provided
+    if (!dbIdProvided && !idFile) {
+      setGeneralError("Owner Identification (ID Proof) is required to proceed.");
+      return;
+    }
+    if (!dbInsuranceProvided && !insuranceFile) {
+      setGeneralError("Public Liability Insurance Document is required to proceed.");
+      return;
+    }
+    if (!menuFile) {
+      setGeneralError("Please upload an image of your trading menu.");
+      return;
+    }
+    if (!insuranceExpiry) {
+      setGeneralError("Please provide your insurance expiration date.");
       return;
     }
 
@@ -107,10 +176,15 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
     setGeneralError(null);
 
     try {
-      // Resolved unused variable warnings by executing them directly or mapping references
-      await uploadFileToBucket(idFile, 'compliance-docs', `${partnerId}/id_proof_${Date.now()}`);
-      await uploadFileToBucket(insuranceFile, 'compliance-docs', `${partnerId}/insurance_${Date.now()}`);
-      await uploadFileToBucket(menuFile, 'venue-media', `${partnerId}/menu_${Date.now()}`);
+      if (idFile) {
+        await uploadFileToBucket(idFile, 'compliance-docs', `${partnerId}/id_proof_${Date.now()}`);
+      }
+      if (insuranceFile) {
+        await uploadFileToBucket(insuranceFile, 'compliance-docs', `${partnerId}/insurance_${Date.now()}`);
+      }
+      if (menuFile) {
+        await uploadFileToBucket(menuFile, 'venue-media', `${partnerId}/menu_${Date.now()}`);
+      }
 
       const { error } = await supabase
         .from('partners')
@@ -200,12 +274,24 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
   }
 
   if (currentStatus === 'compliance_pending') {
+    const isMissingId = !dbIdProvided;
+    const isMissingInsurance = !dbInsuranceProvided;
+
     return (
       <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 20px', color: 'var(--text-primary)' }}>
         <form onSubmit={handleSaveComplianceAndMedia} style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '32px', textAlign: 'left' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px' }}>Compliance & Verification</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Compliance & Verification</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>Please complete the required registration uploads below.</p>
+          
+          {isMissingId && (
+            <div style={{ backgroundColor: 'rgba(219, 68, 85, 0.1)', border: '1px solid #db4455', color: '#db4455', padding: '14px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>
+              ⚠️ Action Required: Government Identity Verification is missing or was rejected. Please re-upload a clear file or photo of your ID.
+            </div>
+          )}
+
           {generalError && <div style={{ backgroundColor: 'rgba(219, 68, 85, 0.1)', border: '1px solid #db4455', color: '#db4455', padding: '12px', borderRadius: '6px', marginBottom: '20px', fontSize: '14px' }}>{generalError}</div>}
 
+          {/* Background FSA Sync Panel */}
           <div style={{ background: 'var(--background-dark)', padding: '20px', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '24px' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 12px 0' }}>Food Hygiene Rating Verification</h3>
             
@@ -228,13 +314,17 @@ export default function VenueDetailsForm({ partnerId, currentStatus, onStatusUpd
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>Upload Owner Identification (ID Proof)</label>
-              <input type="file" accept="image/*,application/pdf" onChange={(e) => setIdFile(e.target.files?.[0] || null)} required style={{ color: 'var(--text-primary)' }} />
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
+                Upload Owner Identification (ID Proof) {dbIdProvided && <span style={{ color: '#4CD137' }}>(✓ Uploaded)</span>}
+              </label>
+              <input type="file" accept="image/*,application/pdf" onChange={(e) => setIdFile(e.target.files?.[0] || null)} required={isMissingId} style={{ color: 'var(--text-primary)' }} />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>Public Liability Insurance Document</label>
-              <input type="file" accept="image/*,application/pdf" onChange={(e) => setInsuranceFile(e.target.files?.[0] || null)} required style={{ color: 'var(--text-primary)' }} />
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
+                Public Liability Insurance Document {dbInsuranceProvided && <span style={{ color: '#4CD137' }}>(✓ Uploaded)</span>}
+              </label>
+              <input type="file" accept="image/*,application/pdf" onChange={(e) => setInsuranceFile(e.target.files?.[0] || null)} required={isMissingInsurance} style={{ color: 'var(--text-primary)' }} />
             </div>
 
             <div>
