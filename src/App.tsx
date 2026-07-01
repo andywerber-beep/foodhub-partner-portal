@@ -60,23 +60,39 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500 italic">Syncing operational state portal network...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-color)' }}>
+        <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Syncing operational state portal network...</p>
       </div>
     );
   }
 
-  // Secure Auth Guard: Prevent unauthenticated fallthrough
+  // Secure Auth Guard aligned with your index.css global layout tokens
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center space-y-4">
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">FoodHub</h1>
-          <p className="text-gray-600 text-sm">Please sign in to access your partner workspace.</p>
-          <div className="pt-2">
+      <div className="app-container">
+        <div className="block-card text-center" style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            FoodHub
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '24px' }}>
+            Please sign in to access your partner workspace.
+          </p>
+          <div>
             <button 
               onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
-              className="w-full py-2.5 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition duration-200"
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: 'var(--coral-accent)',
+                color: 'var(--text-primary)',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--coral-hover)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--coral-accent)')}
             >
               Sign In to Partner Portal
             </button>
