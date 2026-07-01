@@ -25,6 +25,7 @@ export default function App() {
         fetchVenueStatus(currentSession.user.id);
       } else {
         setLoading(false);
+        setStatus(null);
       }
     });
 
@@ -65,6 +66,26 @@ export default function App() {
     );
   }
 
+  // Secure Auth Guard: Prevent unauthenticated fallthrough
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center space-y-4">
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">FoodHub</h1>
+          <p className="text-gray-600 text-sm">Please sign in to access your partner workspace.</p>
+          <div className="pt-2">
+            <button 
+              onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+              className="w-full py-2.5 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition duration-200"
+            >
+              Sign In to Partner Portal
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   switch (status) {
     case 'details_pending':
       return <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} />;
@@ -73,8 +94,8 @@ export default function App() {
     case 'approved':
       return (
         <WelcomeView 
-          partnerId={session?.user?.id || ''} 
-          onEnterPortal={() => fetchVenueStatus(session?.user?.id || '')} 
+          partnerId={session.user.id} 
+          onEnterPortal={() => fetchVenueStatus(session.user.id)} 
         />
       );
     case 'active':
@@ -82,8 +103,8 @@ export default function App() {
     default:
       return (
         <DetailsPendingView 
-          partnerId={session?.user?.id || ''} 
-          onStepComplete={() => fetchVenueStatus(session?.user?.id || '')} 
+          partnerId={session.user.id} 
+          onStepComplete={() => fetchVenueStatus(session.user.id)} 
         />
       );
   }
