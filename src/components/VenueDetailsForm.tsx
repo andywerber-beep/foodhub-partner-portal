@@ -28,37 +28,16 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
     onSubmit({
       name,
       cuisine_type: cuisineType,
-      tel_number: telNumber,
-      address1,
-      town,
-      postcode,
-      insuranceFile,
-      insurance_provided: !!insuranceFile,
-    });
-    
-    setIsSubmitting(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-6">
-      <div className="text-center border-b pb-4">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Partner Venue Profile Registration
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Provide your trading credentials and public liability cover to unlock map features.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Trading Name</label>
+      tel_number      tel_number      tel_number      tel_number      tel_number      tel_number      tel_nce      tel_number      tel_number      tel_number      tel_ng(      tel_number      tel_number      tel_number      tel_number      tel_number -a      tel_number      tel_number      tel_number      tel_number      tel_nt-center border-b pb-4">
+        <h2 className="text-2xl font-bold text-gra        <h2 className="text-2xl font-bold text-gra        <h2 class        <p className="text-sm text-gray-500 mt-1">
+          Provide your t          Provide your t          Provide your t          Provide your             Provide your t          Provide your t         
+                                                                         t-gray-700 mb-1">Trading Name</label>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
+                              p    py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
             placeholder="e.g. The Worthing CrabShack"
           />
         </div>
@@ -101,22 +80,15 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Town/City</label>
+            <label className="block             <lami            <l-700 mb-1">Town/City</label>
             <input
               type="text"
               required
-              value={town}
+                         }
               onChange={(e) => setTown(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Postcode</label>
+              className=              className=              className=          g-a              className=              className=              className=          g-a              className=            t              className=              classNtcode</label>
             <input
-              type="text"
-              required
-              value={postcode}
-              onChange={(e) => setPostcode(e.target.value)}
+              typ                            typ                            typ                            typ                  get.value)}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
               placeholder="e.g. BN11 3PN"
             />
