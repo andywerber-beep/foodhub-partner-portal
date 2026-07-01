@@ -188,7 +188,7 @@ export default function App() {
                 setIsSignUp(!isSignUp);
                 setAuthError(null);
               }}
-              style={{ background: 'none', border: 'none', color: 'var(--coral-accent)', fontSize: '14px', cursor: 'pointer', decoration: 'underline' }}
+              style={{ background: 'none', border: 'none', color: 'var(--coral-accent)', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline' }}
             >
               {isSignUp ? 'Already registered? Sign in' : "Don't have an account? Sign up"}
             </button>
