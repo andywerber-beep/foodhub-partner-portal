@@ -4,6 +4,7 @@ import DetailsPendingView from './views/Onboarding/DetailsPendingView';
 import VenueDetailsForm from './components/VenueDetailsForm';
 import ActiveDashboardView from './views/Portal/ActiveDashboardView';
 import { UnderReviewView } from './views/Review/UnderReviewView';
+import WelcomeView from './views/Onboarding/WelcomeView';
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -69,9 +70,21 @@ export default function App() {
       return <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} />;
     case 'under_review':
       return <UnderReviewView />;
+    case 'approved':
+      return (
+        <WelcomeView 
+          partnerId={session?.user?.id || ''} 
+          onEnterPortal={() => fetchVenueStatus(session?.user?.id || '')} 
+        />
+      );
     case 'active':
       return <ActiveDashboardView />;
     default:
-      return <DetailsPendingView partnerId={session?.user?.id || ''} onStepComplete={() => fetchVenueStatus(session?.user?.id || '')} />;
+      return (
+        <DetailsPendingView 
+          partnerId={session?.user?.id || ''} 
+          onStepComplete={() => fetchVenueStatus(session?.user?.id || '')} 
+        />
+      );
   }
 }
