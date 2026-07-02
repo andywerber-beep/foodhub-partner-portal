@@ -74,8 +74,22 @@ export default function App() {
       setAuthError(null);
 
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
+        
+        if (data?.user) {
+          // Instantly prime the baseline profile inside the partners database table
+          const { error: profileError } = await supabase.from('partners').insert([{
+            id: data.user.id,
+            email: email,
+            status: 'details_pending',
+            id_provided: false,
+            hygiene_provided: false,
+            insurance_provided: false
+          }]);
+          if (profileError) console.error("Profile auto-creation log warning:", profileError);
+        }
+
         setAuthError('Registration successful! Please check your email for a verification link.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -89,7 +103,46 @@ export default function App() {
   };
 
   const handleDetailsSubmit = async (formData: any) => {
-    console.log('Profile submission payload:', formData);
+    if (!session?.user?.id) return;
+    
+    try {
+      let insuranceUploaded = formData.insurance_provided;
+
+      // Handle the physical file storage asset pipeline upload if present
+      if (formData.insuranceFile) {
+        const fileExtension = formData.insuranceFile.name.split('.').pop();
+        const filePath = `${session.user.id}/insurance-${Date.now()}.${fileExtension}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('compliance-docs')
+          .upload(filePath, formData.insuranceFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+        insuranceUploaded = true;
+      }
+
+      // Commit the payload directly to the unique partner column structure
+      const { error: updateError } = await supabase
+        .from('partners')
+        .update({
+          name: formData.name,
+          cuisine_type: formData.cuisine_type,
+          tel_number: formData.tel_number,
+          address1: formData.address1,
+          town: formData.town,
+          postcode: formData.postcode,
+          insurance_provided: insuranceUploaded,
+          status: 'under_review' // Progresses the status tracking workflow state
+        })
+        .eq('id', session.user.id);
+
+      if (updateError) throw updateError;
+      
+      // Refresh to drop user instantly into the UnderReview screen layout
+      await fetchVenueStatus(session.user.id);
+    } catch (error: any) {
+      alert(error.message || 'Error updating partner credentials profile.');
+    }
   };
 
   if (loading) {
@@ -100,7 +153,7 @@ export default function App() {
     );
   }
 
-  // Corrected Dark Theme Authentication Gateway
+  // Dark Theme Authentication Gateway
   if (!session) {
     return (
       <div className="app-container">
@@ -200,7 +253,11 @@ export default function App() {
 
   switch (status) {
     case 'details_pending':
-      return <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} />;
+      return (
+        <div className="app-container">
+          <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} />
+        </div>
+      );
     case 'under_review':
       return <UnderReviewView />;
     case 'approved':

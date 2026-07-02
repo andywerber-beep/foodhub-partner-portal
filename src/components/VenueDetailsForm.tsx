@@ -25,7 +25,7 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
     e.preventDefault();
     setIsSubmitting(true);
     
-    onSubmit({
+    await onSubmit({
       name,
       cuisine_type: cuisineType,
       tel_number: telNumber,
@@ -33,103 +33,103 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
       town,
       postcode,
       insuranceFile,
-      insurance_provided: !!insuranceFile,
+      insurance_provided: !!insuranceFile || !!initialData?.insurance_provided,
     });
     
     setIsSubmitting(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-6">
-      <div className="text-center border-b pb-4">
-        <h2 className="text-2xl font-bold text-gray-800">
+    <form onSubmit={handleSubmit} className="block-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+        <h2 style={{ color: 'var(--text-primary)', fontSize: '24px', fontWeight: 700, margin: 0 }}>
           Partner Venue Profile Registration
         </h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '6px' }}>
           Provide your trading credentials and public liability cover to unlock map features.
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Trading Name</label>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>Trading Name</label>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
             placeholder="e.g. The Worthing CrabShack"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine Type</label>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>Cuisine Type</label>
             <input
               type="text"
               required
               value={cuisineType}
               onChange={(e) => setCuisineType(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
               placeholder="e.g. Seafood"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Telephone Number</label>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>Telephone Number</label>
             <input
               type="tel"
               required
               value={telNumber}
               onChange={(e) => setTelNumber(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
               placeholder="e.g. 01903 123456"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Address Line 1</label>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>Address Line 1</label>
           <input
             type="text"
             required
             value={address1}
             onChange={(e) => setAddress1(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Town/City</label>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>Town/City</label>
             <input
               type="text"
               required
               value={town}
               onChange={(e) => setTown(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Postcode</label>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>Postcode</label>
             <input
               type="text"
               required
               value={postcode}
               onChange={(e) => setPostcode(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900"
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
               placeholder="e.g. BN11 3PN"
             />
           </div>
         </div>
 
-        <hr className="my-4 border-gray-200" />
+        <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '12px 0' }} />
 
-        <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <label className="block text-sm font-bold text-amber-900 mb-2">
+        <div style={{ padding: '16px', backgroundColor: 'rgba(230, 126, 34, 0.05)', borderRadius: '12px', border: '1px solid rgba(230, 126, 34, 0.2)' }}>
+          <label style={{ display: 'block', fontSize: '15px', fontWeight: '700', color: '#e67e22', marginBottom: '6px' }}>
             📄 Public Liability Insurance Certificate
           </label>
-          <p className="text-xs text-amber-700 mb-3">
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>
             Upload a clear photo, file, or PDF of your current cover policy. Identity parameters are verified separately and instantly via our financial partner, Stripe Connect.
           </p>
           <input
@@ -137,10 +137,10 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
             required={!initialData?.insurance_provided}
             accept=".pdf,image/*"
             onChange={handleFileChange}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer"
+            style={{ color: 'var(--text-secondary)', fontSize: '14px' }}
           />
           {initialData?.insurance_provided && (
-            <p className="text-xs text-green-600 font-medium mt-2">
+            <p style={{ color: 'var(--success-color)', fontSize: '13px', fontWeight: 500, marginTop: '8px', margin: 0 }}>
               ✓ Active policy document uploaded and securely archived.
             </p>
           )}
@@ -150,9 +150,9 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition duration-200 disabled:opacity-50"
+        style={{ width: '100%', backgroundColor: isSubmitting ? 'var(--border-color)' : 'var(--coral-accent)', color: '#fff', border: 'none', borderRadius: '12px', padding: '16px', fontSize: '16px', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'background-color 0.2s', marginTop: '12px' }}
       >
-        {isSubmitting ? 'Saving Records...' : 'Save Profile Details'}
+        {isSubmitting ? 'Saving Operational Records...' : 'Save Profile Details'}
       </button>
     </form>
   );
