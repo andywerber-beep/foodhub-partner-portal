@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient'; // Adjusted path to match your views structure
+import { supabase } from '../../lib/supabaseClient';
 
 interface WelcomeViewProps {
   partnerId: string;
@@ -116,15 +116,15 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({
             color: '#4CD137', 
             margin: '0 0 12px 0' 
           }}>
-            Credentials & Compliance Verified Successfully
+            Your documents have been verified.
           </h3>
           
           <p style={{ fontSize: '14px', color: '#dddddd', lineHeight: '1.6', margin: '0 0 16px 0' }}>
-            Your public cover policy and live parameters have passed standard platform review. Your partner profile is now completely unlocked.
+            Your partner profile is now unlocked and you are live on the map.
           </p>
           
           <p style={{ fontSize: '14px', color: '#dddddd', lineHeight: '1.6', margin: 0 }}>
-            You can now pin live partner venue markers to the public customer map, manage menu lists, configure local offers, and track direct purchase payouts.
+            You can now manage menu lists, configure local offers, and track direct purchase payouts.
           </p>
         </div>
 
