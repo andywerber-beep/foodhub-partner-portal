@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
+import { PartnerProvider } from './context/PartnerContext';
 import DetailsPendingView from './views/Onboarding/DetailsPendingView';
 import VenueDetailsForm from './components/VenueDetailsForm';
 import ActiveDashboardView from './views/Portal/ActiveDashboardView';
@@ -78,7 +79,6 @@ export default function App() {
         if (error) throw error;
         
         if (data?.user) {
-          // Instantly prime the baseline profile inside the partners database table
           const { error: profileError } = await supabase.from('partners').insert([{
             id: data.user.id,
             email: email,
@@ -108,7 +108,6 @@ export default function App() {
     try {
       let insuranceUploaded = formData.insurance_provided;
 
-      // Handle the physical file storage asset pipeline upload if present
       if (formData.insuranceFile) {
         const fileExtension = formData.insuranceFile.name.split('.').pop();
         const filePath = `${session.user.id}/insurance-${Date.now()}.${fileExtension}`;
@@ -121,7 +120,6 @@ export default function App() {
         insuranceUploaded = true;
       }
 
-      // Commit the payload directly to the unique partner column structure
       const { error: updateError } = await supabase
         .from('partners')
         .update({
@@ -132,13 +130,12 @@ export default function App() {
           town: formData.town,
           postcode: formData.postcode,
           insurance_provided: insuranceUploaded,
-          status: 'under_review' // Progresses the status tracking workflow state
+          status: 'under_review'
         })
         .eq('id', session.user.id);
 
       if (updateError) throw updateError;
       
-      // Refresh to drop user instantly into the UnderReview screen layout
       await fetchVenueStatus(session.user.id);
     } catch (error: any) {
       alert(error.message || 'Error updating partner credentials profile.');
@@ -251,30 +248,35 @@ export default function App() {
     );
   }
 
-  switch (status) {
-    case 'details_pending':
-      return (
-        <div className="app-container">
-          <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} />
-        </div>
-      );
-    case 'under_review':
-      return <UnderReviewView />;
-    case 'approved':
-      return (
-        <WelcomeView 
-          partnerId={session.user.id} 
-          onEnterPortal={() => fetchVenueStatus(session.user.id)} 
-        />
-      );
-    case 'active':
-      return <ActiveDashboardView />;
-    default:
-      return (
-        <DetailsPendingView 
-          partnerId={session.user.id} 
-          onStepComplete={() => fetchVenueStatus(session.user.id)} 
-        />
-      );
-  }
+  // Wrap all authenticated screens inside PartnerProvider context wrapper to prevent runtime layout exceptions
+  return (
+    <PartnerProvider>
+      <div className="app-container">
+        {(() => {
+          switch (status) {
+            case 'details_pending':
+              return <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} />;
+            case 'under_review':
+              return <UnderReviewView />;
+            case 'approved':
+              return (
+                <WelcomeView 
+                  partnerId={session.user.id} 
+                  onEnterPortal={() => fetchVenueStatus(session.user.id)} 
+                />
+              );
+            case 'active':
+              return <ActiveDashboardView />;
+            default:
+              return (
+                <DetailsPendingView 
+                  partnerId={session.user.id} 
+                  onStepComplete={() => fetchVenueStatus(session.user.id)} 
+                />
+              );
+          }
+        })()}
+      </div>
+    </PartnerProvider>
+  );
 }
