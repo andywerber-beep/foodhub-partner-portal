@@ -15,39 +15,54 @@ export const ActiveDashboardView: React.FC = () => {
   const markerInstance = useRef<any>(null);
 
   const venueName = partner?.name || 'Partner Venue Portal';
-  const cuisineType = partner?.cuisine_type || 'Café / Fully Licensed'; // Correct spelling loaded from your context schema mapping
+  const cuisineType = partner?.cuisine_type || 'Café / Fully Licensed'; 
   const telephoneNumber = partner?.tel_number || 'Not Specified';
-
-  const isMaltId = partner?.id?.toString() === '1' || venueName.toLowerCase().includes('malt');
-  const lat = isMaltId ? 50.8114 : 50.8130; 
-  const lng = isMaltId ? -0.3742 : -0.3705;
 
   useEffect(() => {
     if (activeTab === 'map' && mapRef.current && (window as any).google) {
       const google = (window as any).google;
 
-      const mapOptions = {
-        center: { lat, lng },
-        zoom: 17, 
-        disableDefaultUI: true,
-        zoomControl: true
-      };
+      // Construct full query using dynamic columns directly from Supabase
+      const streetAddress = partner?.address1 || '';
+      const townCity = partner?.town || '';
+      const zipPostcode = partner?.postcode || '';
+      const fullGeocodeAddressString = `${streetAddress}, ${townCity}, ${zipPostcode}`.trim();
 
-      googleMapInstance.current = new google.maps.Map(mapRef.current, mapOptions);
+      // Initialize the live Google Maps Geocoder Service instance
+      const geocoder = new google.maps.Geocoder();
 
-      markerInstance.current = new google.maps.Marker({
-        position: { lat, lng },
-        map: googleMapInstance.current,
-        title: venueName,
-        animation: google.maps.Animation.DROP
-      });
+      geocoder.geocode({ address: fullGeocodeAddressString }, (results: any, status: string) => {
+        if (status === 'OK' && results[0]) {
+          const dynamicLocation = results[0].geometry.location;
 
-      markerInstance.current.addListener('mouseover', () => {
-        setIsHovered(true);
-      });
+          const mapOptions = {
+            center: dynamicLocation,
+            zoom: 17, 
+            disableDefaultUI: true,
+            zoomControl: true
+          };
 
-      markerInstance.current.addListener('mouseout', () => {
-        setIsHovered(false);
+          // Draw the map instance around Google's live coordinates response
+          googleMapInstance.current = new google.maps.Map(mapRef.current, mapOptions);
+
+          // Place the custom map marker drops exactly where Google localized the address
+          markerInstance.current = new google.maps.Marker({
+            position: dynamicLocation,
+            map: googleMapInstance.current,
+            title: venueName,
+            animation: google.maps.Animation.DROP
+          });
+
+          markerInstance.current.addListener('mouseover', () => {
+            setIsHovered(true);
+          });
+
+          markerInstance.current.addListener('mouseout', () => {
+            setIsHovered(false);
+          });
+        } else {
+          console.error('Google Geocoding Service failed due to status error code:', status);
+        }
       });
     }
 
@@ -56,7 +71,7 @@ export const ActiveDashboardView: React.FC = () => {
         (window as any).google?.maps?.event?.clearInstanceListeners(markerInstance.current);
       }
     };
-  }, [activeTab, partner, lat, lng, venueName]);
+  }, [activeTab, partner, venueName]);
 
   return (
     <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', padding: '40px 20px', boxSizing: 'border-box' }}>
@@ -161,7 +176,7 @@ export const ActiveDashboardView: React.FC = () => {
               <h4 style={{ fontSize: '32px', color: 'var(--coral-accent)', margin: 0, fontWeight: 700 }}>10.0%</h4>
             </div>
             <div style={{ backgroundColor: 'var(--background-dark)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>PLATFORM SERVICE FEE</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>MONTHLY SUBSCRIPTION FEE</span>
               <h4 style={{ fontSize: '32px', color: 'var(--text-primary)', margin: 0, fontWeight: 700 }}>£49.00<span style={{ fontSize: '16px', color: 'var(--text-secondary)', fontWeight: 400 }}> /mo</span></h4>
             </div>
           </div>
@@ -226,9 +241,9 @@ export const ActiveDashboardView: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: 'var(--background-dark)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', fontSize: '14px' }}>
             <div><strong style={{ color: 'var(--text-secondary)' }}>Cuisine Category:</strong> <span style={{ color: 'var(--text-primary)' }}>{cuisineType}</span></div>
             <div><strong style={{ color: 'var(--text-secondary)' }}>Telephone Line:</strong> <span style={{ color: 'var(--text-primary)' }}>{telephoneNumber}</span></div>
-            <div><strong style={{ color: 'var(--text-secondary)' }}>Street Address:</strong> <span style={{ color: 'var(--text-primary)' }}>{partner?.address1 || (isMaltId ? '167 Montague Street' : '29 Graham Road')} {partner?.address2 ? `, ${partner?.address2}` : ''}</span></div>
-            <div><strong style={{ color: 'var(--text-secondary)' }}>Town/City:</strong> <span style={{ color: 'var(--text-primary)' }}>{partner?.town || 'Worthing'}</span></div>
-            <div><strong style={{ color: 'var(--text-secondary)' }}>Postcode Sector:</strong> <span style={{ color: 'var(--text-primary)' }}>{partner?.postcode || 'BN11 3BZ'}</span></div>
+            <div><strong style={{ color: 'var(--text-secondary)' }}>Street Address:</strong> <span style={{ color: 'var(--text-primary)' }}>{partner?.address1 || ''} {partner?.address2 ? `, ${partner?.address2}` : ''}</span></div>
+            <div><strong style={{ color: 'var(--text-secondary)' }}>Town/City:</strong> <span style={{ color: 'var(--text-primary)' }}>{partner?.town || ''}</span></div>
+            <div><strong style={{ color: 'var(--text-secondary)' }}>Postcode Sector:</strong> <span style={{ color: 'var(--text-primary)' }}>{partner?.postcode || ''}</span></div>
           </div>
         </div>
       )}
