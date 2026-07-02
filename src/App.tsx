@@ -5,7 +5,7 @@ import DetailsPendingView from './views/Onboarding/DetailsPendingView';
 import VenueDetailsForm from './components/VenueDetailsForm';
 import ActiveDashboardView from './views/Portal/ActiveDashboardView';
 import { UnderReviewView } from './views/Review/UnderReviewView';
-import WelcomeView from './views/Onboarding/WelcomeView';
+import { WelcomeView } from './views/Onboarding/WelcomeView'; // Corrected named import statement
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -262,6 +262,7 @@ export default function App() {
               return (
                 <WelcomeView 
                   partnerId={session.user.id} 
+                  partnerName={initialData?.name || 'Partner Venue'} 
                   onEnterPortal={() => fetchVenueStatus(session.user.id)} 
                 />
               );
