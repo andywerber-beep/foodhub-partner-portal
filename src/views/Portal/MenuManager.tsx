@@ -1,369 +1,302 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { usePartner } from '../../context/PartnerContext';
 import { supabase } from '../../lib/supabaseClient';
 
-interface CombinedItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  isLiveOffer: boolean;
-  offerPrice?: number;
-  originTable: 'menus' | 'offers';
-}
-
-export function MenuManager() {
+export const MenuManager: React.FC = () => {
   const { partner } = usePartner();
-  const [items, setItems] = useState<CombinedItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'offers'>('all');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [subTab, setSubTab] = useState<'menu' | 'offers'>('menu');
+  const [showDrawer, setShowDrawer] = useState<boolean>(false);
+  const [drawerType, setDrawerType] = useState<'item' | 'document'>('item');
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  // Form States
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
+  // Form Field States
+  const [itemName, setItemName] = useState('');
   const [category, setCategory] = useState('Mains');
-  const [isLiveOffer, setIsLiveOffer] = useState(false);
-  const [offerPrice, setOfferPrice] = useState('');
+  const [price, setPrice] = useState('12.50');
+  const [description, setDescription] = useState('');
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
 
-  const fetchMenuData = async () => {
-    if (!partner?.id) return;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOpenDrawer = (type: 'item' | 'document') => {
+    setDrawerType(type);
+    setShowDrawer(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setShowDrawer(false);
+    setItemName('');
+    setPrice('12.50');
+    setDescription('');
+    setMediaUrl(null);
+  };
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !partner?.id) return;
+
+    setIsUploading(true);
     try {
-      const { data: menuData, error: menuError } = await supabase
-        .from('menus')
-        .select('*')
-        .eq('venue_id', partner.id);
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${partner.id}/${Date.now()}.${fileExtension}`;
+      
+      const { error } = await supabase.storage
+        .from('venue-media')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
 
-      const { data: offerData, error: offerError } = await supabase
-        .from('offers')
-        .select('*')
-        .eq('venue_id', partner.id);
+      if (error) throw error;
 
-      if (menuError) throw menuError;
-      if (offerError) throw offerError;
+      const { data: publicUrlData } = supabase.storage
+        .from('venue-media')
+        .getPublicUrl(fileName);
 
-      const formattedMenus: CombinedItem[] = (menuData || []).map((m: any) => ({
-        id: m.id.toString(),
-        name: m.name,
-        description: m.description || '',
-        price: parseFloat(m.price),
-        category: m.category || 'Mains',
-        isLiveOffer: false,
-        originTable: 'menus'
-      }));
-
-      const formattedOffers: CombinedItem[] = (offerData || []).map((o: any) => ({
-        id: o.id.toString(),
-        name: o.name,
-        description: o.description || '',
-        price: parseFloat(o.price),
-        category: o.category || 'Mains',
-        isLiveOffer: true,
-        offerPrice: parseFloat(o.offer_price),
-        originTable: 'offers'
-      }));
-
-      setItems([...formattedMenus, ...formattedOffers]);
+      setMediaUrl(publicUrlData.publicUrl);
     } catch (err) {
-      console.error('Error querying platform registries:', err);
+      console.error('Asset camera upload exception triggered:', err);
     } finally {
-      setLoading(false);
+      setIsUploading(false);
     }
   };
 
-  // Dual-channel real-time sync hook
-  useEffect(() => {
-    if (!partner?.id) return;
-
-    // Initial load
-    setLoading(true);
-    fetchMenuData();
-
-    // Create a real-time channel to listen for any modifications to menus or offers tables
-    const menuChannel = supabase
-      .channel(`venue-updates-${partner.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to INSERT, UPDATE, and DELETE
-          schema: 'public',
-          table: 'menus',
-          filter: `venue_id=eq.${partner.id}`
-        },
-        () => {
-          fetchMenuData();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to INSERT, UPDATE, and DELETE
-          schema: 'public',
-          table: 'offers',
-          filter: `venue_id=eq.${partner.id}`
-        },
-        () => {
-          fetchMenuData();
-        }
-      )
-      .subscribe();
-
-    // Clean up channel listener on component unmount
-    return () => {
-      supabase.removeChannel(menuChannel);
-    };
-  }, [partner?.id]);
-
-  const handleAddItem = async (e: React.FormEvent) => {
+  const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price || !partner?.id) return;
+    if (!partner?.id || !itemName) return;
 
+    setIsSaving(true);
     try {
-      if (isLiveOffer) {
-        const { error } = await supabase
-          .from('offers')
-          .insert([{
-            venue_id: partner.id,
-            name,
-            description,
-            price: parseFloat(price),
-            offer_price: offerPrice ? parseFloat(offerPrice) : parseFloat(price) * 0.9,
-            category
-          }]);
+      if (subTab === 'menu') {
+        const { error } = await supabase.from('menus').insert([{
+          venue_id: partner.id,
+          name: itemName,
+          category: category,
+          price: parseFloat(price) || 0,
+          description: description,
+          image_url: mediaUrl,
+          created_at: new Date().toISOString()
+        }]);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('menus')
-          .insert([{
-            venue_id: partner.id,
-            name,
-            description,
-            price: parseFloat(price),
-            category
-          }]);
+        const { error } = await supabase.from('offers').insert([{
+          venue_id: partner.id,
+          title: itemName,
+          description: description,
+          discount_price: parseFloat(price) || 0,
+          image_url: mediaUrl,
+          created_at: new Date().toISOString()
+        }]);
         if (error) throw error;
       }
 
-      // Reset form states locally
-      setName('');
-      setDescription('');
-      setPrice('');
-      setIsLiveOffer(false);
-      setOfferPrice('');
+      handleCloseDrawer();
+      window.location.reload(); 
     } catch (err) {
-      console.error('Error inserting item registry:', err);
+      console.error('Error committing registry configuration:', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const filteredItems = items.filter(item => {
-    if (activeTab === 'offers') return item.isLiveOffer;
-    return true;
-  });
-
   return (
-    <div style={{ color: 'var(--text-primary)', width: '100%' }}>
+    <div style={{ textAlign: 'left', background: '#141414', padding: '32px', borderRadius: '16px', border: '1px solid #222' }}>
       
-      <div style={{ marginBottom: '32px', textAlign: 'left' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Menus & Live Offers Management</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
-          Configure your digital menu and push promotional flash deals straight to partner venue maps.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '28px' }}>
+        <div>
+          <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: 0 }}>Menus & Live Offers Management</h3>
+          <p style={{ color: '#888', fontSize: '13px', margin: '4px 0 0 0' }}>Configure digital variants or push promotional flash updates straight to customer maps.</p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => handleOpenDrawer('document')}
+            style={{
+              padding: '12px 22px',
+              borderRadius: '100px',
+              border: '1px solid #2a2a2a',
+              backgroundColor: '#1c1c1c',
+              color: '#eee',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.3)',
+              transition: 'transform 0.1s ease, background-color 0.2s',
+            }}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            📷 Upload Menu Document
+          </button>
+          
+          <button
+            onClick={() => handleOpenDrawer('item')}
+            style={{
+              padding: '12px 22px',
+              borderRadius: '100px',
+              border: 'none',
+              backgroundColor: '#FF6B6B',
+              color: '#fff',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(255,107,107,0.35), inset 0 1px 1px rgba(255,255,255,0.2)',
+              transition: 'transform 0.1s ease, background-color 0.2s'
+            }}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            + Add New Entry
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '32px', alignItems: 'start' }}>
-        
-        <div>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-            <button
-              onClick={() => setActiveTab('all')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: activeTab === 'all' ? 'var(--coral-accent)' : 'var(--text-secondary)',
-                fontWeight: 600,
-                fontSize: '15px',
-                cursor: 'pointer',
-                padding: '4px 0',
-                borderBottom: activeTab === 'all' ? '2px solid var(--coral-accent)' : '2px solid transparent',
-              }}
-            >
-              Full Menu ({items.filter(i => !i.isLiveOffer).length})
-            </button>
-            <button
-              onClick={() => setActiveTab('offers')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: activeTab === 'offers' ? 'var(--coral-accent)' : 'var(--text-secondary)',
-                fontWeight: 600,
-                fontSize: '15px',
-                cursor: 'pointer',
-                padding: '4px 0',
-                borderBottom: activeTab === 'offers' ? '2px solid var(--coral-accent)' : '2px solid transparent',
-              }}
-            >
-              🔥 Live Flash Offers ({items.filter(i => i.isLiveOffer).length})
-            </button>
+      {showDrawer && (
+        <div style={{ 
+          backgroundColor: '#1a1a1a', 
+          border: '1px solid #2a2a2a', 
+          borderRadius: '14px', 
+          padding: '28px', 
+          marginBottom: '32px',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02), 0 8px 32px rgba(0,0,0,0.4)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #262626', paddingBottom: '12px' }}>
+            <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#fff' }}>
+              {drawerType === 'document' ? 'Upload Menu Document Asset' : `Add New Custom ${subTab === 'menu' ? 'Menu Item' : 'Flash Offer'}`}
+            </h4>
+            <button onClick={handleCloseDrawer} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: '20px', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
           </div>
 
-          {loading ? (
-            <div style={{ color: 'var(--text-secondary)', fontSize: '14px', padding: '20px 0', textAlign: 'left' }}>Synchronizing registry records...</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {filteredItems.length === 0 ? (
-                <div style={{ background: 'var(--card-bg)', padding: '40px', borderRadius: '8px', textAlign: 'center', border: '1px dashed var(--border-color)', color: 'var(--text-secondary)' }}>
-                  No active items cataloged under this category view.
-                </div>
-              ) : (
-                filteredItems.map(item => (
-                  <div 
-                    key={`${item.originTable}-${item.id}`} 
-                    style={{ 
-                      background: 'var(--card-bg)', 
-                      borderRadius: '8px', 
-                      padding: '20px', 
-                      border: '1px solid var(--border-color)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '12px', background: 'var(--background-dark)', color: 'var(--text-secondary)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                          {item.category}
-                        </span>
-                        {item.isLiveOffer && (
-                          <span style={{ fontSize: '11px', background: 'rgba(255,107,107,0.15)', color: 'var(--coral-accent)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                            LIVE PROXIMITY OFFER
-                          </span>
-                        )}
-                        <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>{item.name}</h3>
-                      </div>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>{item.description}</p>
-                    </div>
-
-                    <div style={{ textAlign: 'right', minWidth: '80px' }}>
-                      {item.isLiveOffer && item.offerPrice ? (
-                        <>
-                          <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--coral-accent)' }}>£{item.offerPrice.toFixed(2)}</div>
-                          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textDecoration: 'line-through' }}>£{item.price.toFixed(2)}</div>
-                        </>
-                      ) : (
-                        <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>£{item.price.toFixed(2)}</div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+          {drawerType === 'document' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #333', padding: '40px', borderRadius: '10px', backgroundColor: '#141414', textAlign: 'center' }}>
+              <input type="file" accept="image/*,application/pdf" ref={fileInputRef} onChange={handleMediaUpload} style={{ display: 'none' }} />
+              <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#aaa' }}>Select a physical high-res photo or document sheet of your current menu layout.</p>
+              <button 
+                type="button"
+                disabled={isUploading}
+                onClick={() => fileInputRef.current?.click()}
+                style={{ padding: '10px 20px', borderRadius: '100px', backgroundColor: isUploading ? '#333' : '#FF6B6B', border: 'none', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
+              >
+                {isUploading ? 'Uploading Media Pipeline...' : 'Select File Source'}
+              </button>
+              {mediaUrl && <div style={{ marginTop: '14px', color: '#4CD137', fontSize: '13px', fontWeight: 600 }}>✓ File processed and hosted successfully!</div>}
             </div>
+          ) : (
+            <form onSubmit={handleSaveItem} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '6px', letterSpacing: '0.5px' }}>ITEM TITLE / NAME</label>
+                  <input required type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="e.g. Woodfired Pizza" style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', boxSizing: 'border-box' }} />
+                </div>
+
+                {subTab === 'menu' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '6px', letterSpacing: '0.5px' }}>CATEGORY CLASSIFICATION</label>
+                    <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff' }}>
+                      <option>Mains</option>
+                      <option>Starters</option>
+                      <option>Desserts</option>
+                      <option>Drinks</option>
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '6px', letterSpacing: '0.5px' }}>BASE RETAIL VALUE (£)</label>
+                  <input required type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '6px', letterSpacing: '0.5px' }}>COMPREHENSIVE ENTRY DESCRIPTION</label>
+                  <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="List ingredients or preparation callouts..." style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'none' }} />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '6px', letterSpacing: '0.5px' }}>ITEM VISUAL (OPTIONAL)</label>
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={handleMediaUpload} style={{ display: 'none' }} />
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{ padding: '10px 16px', borderRadius: '6px', backgroundColor: '#222', border: '1px solid #333', color: '#ccc', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      {isUploading ? 'Processing...' : '📷 Snap/Attach Photo'}
+                    </button>
+                    {mediaUrl && <span style={{ color: '#4CD137', fontSize: '12px', fontWeight: 600 }}>✓ Loaded</span>}
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isSaving || isUploading}
+                  style={{ marginTop: '4px', width: '100%', padding: '14px', borderRadius: '6px', backgroundColor: '#FF6B6B', color: '#fff', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}
+                >
+                  {isSaving ? 'Committed Changes...' : 'Save and Publish Item'}
+                </button>
+              </div>
+
+            </form>
           )}
         </div>
+      )}
 
-        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '24px', textAlign: 'left' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: 'var(--text-primary)' }}>Add New Item</h3>
-          
-          <form onSubmit={handleAddItem} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase' }}>Item Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Woodfired Pizza"
-                required
-                style={{ width: '100%', background: 'var(--background-dark)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase' }}>Category Classification</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                style={{ width: '100%', background: 'var(--background-dark)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', boxSizing: 'border-box' }}
-              >
-                <option value="Mains">Mains</option>
-                <option value="Sides">Sides</option>
-                <option value="Drinks">Drinks</option>
-                <option value="Desserts">Desserts</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase' }}>Base Retail Price (£)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="12.50"
-                required
-                style={{ width: '100%', background: 'var(--background-dark)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase' }}>Menu Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="List ingredients or preparation dietary callouts..."
-                rows={3}
-                style={{ width: '100%', background: 'var(--background-dark)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', boxSizing: 'border-box', resize: 'none' }}
-              />
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '4px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-primary)' }}>
-                <input
-                  type="checkbox"
-                  checked={isLiveOffer}
-                  onChange={(e) => setIsLiveOffer(e.target.checked)}
-                  style={{ width: '16px', height: '16px', accentColor: 'var(--coral-accent)' }}
-                />
-                <span>Set as Live Flash Offer</span>
-              </label>
-            </div>
-
-            {isLiveOffer && (
-              <div style={{ background: 'var(--background-dark)', padding: '12px', borderRadius: '6px', border: '1px solid var(--coral-accent)' }}>
-                <label style={{ display: 'block', fontSize: '11px', color: 'var(--coral-accent)', marginBottom: '6px', fontWeight: 700 }}>PROMOTIONAL FLASH PRICE (£)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={offerPrice}
-                  onChange={(e) => setOfferPrice(e.target.value)}
-                  placeholder="9.99"
-                  required={isLiveOffer}
-                  style={{ width: '100%', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '8px', color: 'var(--text-primary)', boxSizing: 'border-box' }}
-                />
-              </div>
-            )}
-
-            <button
-              type="submit"
-              style={{
-                width: '100%',
-                background: 'var(--coral-accent)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                marginTop: '8px',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              Add Item to Live Roster
-            </button>
-          </form>
-        </div>
-
+      <div style={{ display: 'flex', gap: '24px', borderBottom: '1px solid #222', marginBottom: '24px', paddingBottom: '2px' }}>
+        <button
+          onClick={() => setSubTab('menu')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderBottom: subTab === 'menu' ? '2px solid #FF6B6B' : '2px solid transparent',
+            color: subTab === 'menu' ? '#FF6B6B' : '#666666',
+            padding: '8px 4px',
+            fontSize: '14px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          Full Menu Registry
+        </button>
+        <button
+          onClick={() => setSubTab('offers')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderBottom: subTab === 'offers' ? '2px solid #FF6B6B' : '2px solid transparent',
+            color: subTab === 'offers' ? '#FF6B6B' : '#666666',
+            padding: '8px 4px',
+            fontSize: '14px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          Live Flash Offers
+        </button>
       </div>
+
+      <div style={{ 
+        width: '100%', 
+        minHeight: '260px', 
+        border: '1px dashed #262626', 
+        borderRadius: '12px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#101010',
+        padding: '40px 20px',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ textShadow: 'none', textAlign: 'center', maxWidth: '360px' }}>
+          <p style={{ margin: 0, fontSize: '15px', color: '#555555', fontWeight: 500, lineHeight: '1.6' }}>
+            No active items cataloged under this category view. Click either button above to build out your menu footprint.
+          </p>
+        </div>
+      </div>
+
     </div>
   );
-}
+};
+
+export default MenuManager;
