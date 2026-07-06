@@ -311,5 +311,3 @@ export const MenuManager: React.FC = () => {
     </div>
   );
 };
-
-export default MenuManager;
