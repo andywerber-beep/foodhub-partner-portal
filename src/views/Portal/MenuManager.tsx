@@ -9,10 +9,8 @@ export const MenuManager: React.FC = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [activeOfferExists, setActiveOfferExists] = useState<boolean>(false);
 
-  // Core Website Sync State
   const [websiteUrl, setWebsiteUrl] = useState<string>('');
 
-  // Minimalist Flash Offer Form States (0-based defaults)
   const [offerTitle, setOfferTitle] = useState('');
   const [price, setPrice] = useState('0.00');
   const [description, setDescription] = useState('');
@@ -20,12 +18,10 @@ export const MenuManager: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync initial configuration state data from Supabase maps
   useEffect(() => {
     const fetchVenueConfig = async () => {
       if (!partner?.id) return;
       try {
-        // Fetch Website URL from partners matrix
         const { data: partnerData } = await supabase
           .from('partners')
           .select('website_url')
@@ -36,7 +32,6 @@ export const MenuManager: React.FC = () => {
           setWebsiteUrl(partnerData.website_url);
         }
 
-        // Fetch current active offer to verify state within 24 hours
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { data: offerData } = await supabase
           .from('offers')
@@ -63,13 +58,16 @@ export const MenuManager: React.FC = () => {
   const handleSaveWebsite = async () => {
     if (!partner?.id) return;
     try {
-      await supabase
+      const { error } = await supabase
         .from('partners')
         .update({ website_url: websiteUrl })
         .eq('id', partner.id);
-      alert('Website linked successfully.');
+      
+      if (error) throw error;
+      alert('Website successfully linked.');
     } catch (err) {
       console.error('Error committing website update pipeline:', err);
+      alert('Failed to save website link.');
     }
   };
 
@@ -79,7 +77,6 @@ export const MenuManager: React.FC = () => {
 
     setIsUploading(true);
     try {
-      // Deterministic fixed route destination paths to continuously overwrite old file assets seamlessly
       const fileName = `offers/${partner.id}.jpg`;
       
       const { error } = await supabase.storage
@@ -106,7 +103,6 @@ export const MenuManager: React.FC = () => {
 
     setIsSaving(true);
     try {
-      // Clean up old references instantly before mounting a fresh push campaign
       await supabase.from('offers').delete().eq('venue_id', partner.id);
 
       const { error } = await supabase.from('offers').insert([{
@@ -129,7 +125,6 @@ export const MenuManager: React.FC = () => {
     }
   };
 
-  // Instant emergency withdraw panic drop switch
   const handleWithdrawOffer = async () => {
     if (!partner?.id) return;
     if (!confirm('Withdraw this flash offer from customer map popups immediately?')) return;
@@ -151,22 +146,22 @@ export const MenuManager: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      {/* 1. Website Integration Sync Card */}
+      {/* 1. Ultra-Clean Website Integration Sync Card */}
       <div style={{ textAlign: 'left', background: '#141414', padding: '24px', borderRadius: '16px', border: '1px solid #222' }}>
-        <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '0 0 4px 0' }}>Menu Website Sync</h4>
-        <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px 0' }}>Customers are redirected here directly from your active map pin popup layout to see your full menu choice array.</p>
+        <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '0 0 16px 0' }}>Link your website here</h4>
         
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', maxWidth: '600px' }}>
           <input 
             type="url" 
             value={websiteUrl} 
             onChange={(e) => setWebsiteUrl(e.target.value)}
-            placeholder="https://yourvenue.com/menu" 
+            placeholder="https://yourvenue.com" 
             style={{ flex: 1, minWidth: '240px', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '8px', color: '#fff' }}
           />
           <button 
+            type="button"
             onClick={handleSaveWebsite}
-            style={{ padding: '12px 24px', borderRadius: '100px', backgroundColor: '#222', border: '1px solid #333', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+            style={{ padding: '12px 24px', borderRadius: '100px', backgroundColor: '#FF6B6B', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
           >
             Link Website Menu
           </button>
@@ -220,12 +215,10 @@ export const MenuManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Tactile Slide-Down Panel Input Container */}
         {showDrawer && (
           <div style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '14px', padding: '28px', marginBottom: '32px' }}>
             <form onSubmit={handlePublishOffer} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
               
-              {/* Text Parameters */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#555', marginBottom: '6px', letterSpacing: '0.5px' }}>OFFER TITLE</label>
@@ -238,7 +231,6 @@ export const MenuManager: React.FC = () => {
                 </div>
               </div>
 
-              {/* Description & Camera Sync Split */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#555', marginBottom: '6px', letterSpacing: '0.5px' }}>ITEM DESCRIPTION</label>
@@ -273,7 +265,6 @@ export const MenuManager: React.FC = () => {
           </div>
         )}
 
-        {/* Dynamic Display Layout State View */}
         <div style={{ 
           width: '100%', 
           minHeight: '220px', 
