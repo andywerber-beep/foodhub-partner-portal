@@ -3,7 +3,7 @@ import { supabase } from './lib/supabaseClient';
 import { PartnerProvider } from './context/PartnerContext';
 import DetailsPendingView from './views/Onboarding/DetailsPendingView';
 import VenueDetailsForm from './components/VenueDetailsForm';
-import ActiveDashboardView from './views/Portal/ActiveDashboardView';
+import { ActiveDashboardView } from './views/Portal/ActiveDashboardView';
 import { UnderReviewView } from './views/Review/UnderReviewView';
 import { WelcomeView } from './views/Onboarding/WelcomeView'; // Corrected named import statement
 
