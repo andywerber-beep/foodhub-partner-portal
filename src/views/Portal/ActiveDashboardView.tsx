@@ -5,14 +5,12 @@ import { supabase } from '../../lib/supabaseClient';
 
 export const ActiveDashboardView: React.FC = () => {
   const { partner } = usePartner();
-  // Defaulting strictly to map view first as requested
   const [activeTab, setActiveTab] = useState<'map' | 'overview' | 'menu'>('map');
   
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [proximityPingActive, setProximityPingActive] = useState<boolean>(true);
   const [hasActiveOffers, setHasActiveOffers] = useState<boolean>(false);
 
-  // Clean real-time metric tracker starting strictly at 0 for live test tracking
   const [metrics] = useState({
     dailyRevenue: '0.00',
     monthlyRevenue: '0.00',
@@ -27,7 +25,6 @@ export const ActiveDashboardView: React.FC = () => {
   const cuisineType = partner?.cuisine_type || 'Café / Fully Licensed'; 
   const telephoneNumber = partner?.tel_number || 'Not Specified';
 
-  // Evaluate if an active offer exists within a 24-hour window
   useEffect(() => {
     const checkOffers = async () => {
       if (!partner?.id) return;
@@ -121,7 +118,6 @@ export const ActiveDashboardView: React.FC = () => {
         </div>
       </header>
 
-      {/* Fluid Pill Navigation Tabs */}
       <nav style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '10px', marginBottom: '32px', paddingBottom: '4px' }}>
         <button
           onClick={() => setActiveTab('map')}
@@ -177,26 +173,9 @@ export const ActiveDashboardView: React.FC = () => {
       </nav>
 
       {activeTab === 'map' && (
-        <div style={{ textAlign: 'left', background: '#141414', padding: '32px', borderRadius: '16px', border: '1px solid #222' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0 }}>Permanent Map Pin Real Estate</h3>
-              <p style={{ color: '#888', fontSize: '13px', margin: '4px 0 0 0' }}>
-                Your business billboard remains visible 24/7 on customer maps. Below is your targeted proximity delivery point.
-              </p>
-            </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', background: '#1a1a1a', padding: '8px 14px', borderRadius: '100px', border: '1px solid #262626' }}>
-              <input 
-                type="checkbox" 
-                checked={proximityPingActive} 
-                onChange={(e) => setProximityPingActive(e.target.checked)}
-                style={{ accentColor: '#FF6B6B' }}
-              />
-              <span style={{ color: '#fff', fontWeight: 500 }}>Proximity Smartphone Pings</span>
-            </label>
-          </div>
+        <div style={{ textAlign: 'left', background: '#141414', padding: '24px', borderRadius: '16px', border: '1px solid #222' }}>
           
-          <div style={{ position: 'relative', width: '100%', height: '380px', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px', border: '1px solid #262626' }}>
+          <div style={{ position: 'relative', width: '100%', height: '420px', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px', border: '1px solid #262626' }}>
             <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
             {isHovered && (
@@ -210,7 +189,7 @@ export const ActiveDashboardView: React.FC = () => {
                 borderRadius: '12px',
                 color: '#fff',
                 width: '260px',
-                boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                boxShadow: '0 12px 36 rgba(0,0,0,0.6)',
                 zIndex: 1000,
                 pointerEvents: 'none'
               }}>
@@ -224,12 +203,12 @@ export const ActiveDashboardView: React.FC = () => {
                     {hasActiveOffers ? (
                       <>
                         <div style={{ fontSize: '11px', color: '#4CD137', fontWeight: 700 }}>● PIN GLOWING LIVE</div>
-                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#888', lineHeight: '1.4' }}>Flash offer active. Walking users receive automated background alerts.</p>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#888', lineHeight: '1.4' }}>Flash offer active. Walking users receive automated alerts.</p>
                       </>
                     ) : (
                       <>
                         <div style={{ fontSize: '11px', color: '#888', fontWeight: 700 }}>○ PIN STANDARD VIEW</div>
-                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#666', lineHeight: '1.4' }}>No live offer running. Pin shows your basic details and direct website menu link.</p>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#666', lineHeight: '1.4' }}>No live offer running.</p>
                       </>
                     )}
                   </div>
@@ -238,13 +217,29 @@ export const ActiveDashboardView: React.FC = () => {
             )}
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#1a1a1a', padding: '24px', borderRadius: '12px', border: '1px solid #262626', fontSize: '13px' }}>
-            <div><strong style={{ color: '#666', marginRight: '8px' }}>Cuisine Type:</strong> <span style={{ color: '#fff' }}>{cuisineType}</span></div>
-            <div><strong style={{ color: '#666', marginRight: '8px' }}>Telephone:</strong> <span style={{ color: '#fff' }}>{telephoneNumber}</span></div>
-            <div><strong style={{ color: '#666', marginRight: '8px' }}>Address:</strong> <span style={{ color: '#fff' }}>{partner?.address1 || ''} {partner?.address2 ? `, ${partner?.address2}` : ''}</span></div>
-            <div><strong style={{ color: '#666', marginRight: '8px' }}>Town/City:</strong> <span style={{ color: '#fff' }}>{partner?.town || ''}</span></div>
-            <div><strong style={{ color: '#666', marginRight: '8px' }}>Postcode:</strong> <span style={{ color: '#fff' }}>{partner?.postcode || ''}</span></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: '#1a1a1a', padding: '24px', borderRadius: '12px', border: '1px solid #262626' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid #262626', paddingBottom: '16px' }}>
+              <span style={{ color: '#aaa', fontSize: '13px', fontWeight: 600 }}>Active Configuration Controls</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', background: '#121212', padding: '8px 14px', borderRadius: '100px', border: '1px solid #222' }}>
+                <input 
+                  type="checkbox" 
+                  checked={proximityPingActive} 
+                  onChange={(e) => setProximityPingActive(e.target.checked)}
+                  style={{ accentColor: '#FF6B6B' }}
+                />
+                <span style={{ color: '#fff', fontWeight: 500 }}>Proximity Smartphone Pings</span>
+              </label>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', fontSize: '13px' }}>
+              <div><strong style={{ color: '#666', marginRight: '8px' }}>Cuisine Type:</strong> <span style={{ color: '#fff' }}>{cuisineType}</span></div>
+              <div><strong style={{ color: '#666', marginRight: '8px' }}>Telephone:</strong> <span style={{ color: '#fff' }}>{telephoneNumber}</span></div>
+              <div><strong style={{ color: '#666', marginRight: '8px' }}>Address:</strong> <span style={{ color: '#fff' }}>{partner?.address1 || ''} {partner?.address2 ? `, ${partner?.address2}` : ''}</span></div>
+              <div><strong style={{ color: '#666', marginRight: '8px' }}>Town/City:</strong> <span style={{ color: '#fff' }}>{partner?.town || ''}</span></div>
+              <div><strong style={{ color: '#666', marginRight: '8px' }}>Postcode:</strong> <span style={{ color: '#fff' }}>{partner?.postcode || ''}</span></div>
+            </div>
           </div>
+
         </div>
       )}
 
@@ -254,7 +249,7 @@ export const ActiveDashboardView: React.FC = () => {
         <div style={{ textAlign: 'left', background: '#141414', padding: '32px', borderRadius: '16px', border: '1px solid #222' }}>
           <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#fff' }}>Performance Metrics</h3>
           <p style={{ color: '#888', fontSize: '14px', marginBottom: '32px', lineHeight: '1.5' }}>
-            Monitor your platform engagement and incoming volume loops. All variables clear out automatically to track real-time launches cleanly.
+            Monitor your platform engagement.
           </p>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
@@ -276,5 +271,3 @@ export const ActiveDashboardView: React.FC = () => {
     </div>
   );
 };
-
-export default ActiveDashboardView;

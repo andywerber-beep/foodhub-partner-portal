@@ -111,6 +111,9 @@ export const MenuManager: React.FC = () => {
         description: description,
         discount_price: parseFloat(price) || 0,
         image_url: mediaUrl,
+        discount_type: 'Flash Promotion',
+        is_active: true,
+        proximity_ping: true,
         created_at: new Date().toISOString()
       }]);
 
@@ -118,8 +121,10 @@ export const MenuManager: React.FC = () => {
 
       setActiveOfferExists(true);
       setShowDrawer(false);
+      alert('Offer published live successfully!');
     } catch (err) {
       console.error('Error writing flash offer routing:', err);
+      alert('Failed to save flash offer.');
     } finally {
       setIsSaving(false);
     }
@@ -127,7 +132,7 @@ export const MenuManager: React.FC = () => {
 
   const handleWithdrawOffer = async () => {
     if (!partner?.id) return;
-    if (!confirm('Withdraw this flash offer from customer map popups immediately?')) return;
+    if (!confirm('Withdraw this offer immediately?')) return;
 
     try {
       await supabase.from('offers').delete().eq('venue_id', partner.id);
@@ -138,6 +143,7 @@ export const MenuManager: React.FC = () => {
       setDescription('');
       setMediaUrl(null);
       setShowDrawer(false);
+      alert('Offer withdrawn completely.');
     } catch (err) {
       console.error('Error dropping offer visibility rules:', err);
     }
@@ -146,7 +152,6 @@ export const MenuManager: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      {/* 1. Ultra-Clean Website Integration Sync Card */}
       <div style={{ textAlign: 'left', background: '#141414', padding: '24px', borderRadius: '16px', border: '1px solid #222' }}>
         <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '0 0 16px 0' }}>Link your website here</h4>
         
@@ -168,12 +173,10 @@ export const MenuManager: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Live Offers Dashboard Area */}
       <div style={{ textAlign: 'left', background: '#141414', padding: '32px', borderRadius: '16px', border: '1px solid #222' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '28px' }}>
           <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: 0 }}>Live Offers Management</h3>
-            <p style={{ color: '#666', fontSize: '13px', margin: '4px 0 0 0' }}>Broadcast flash updates directly to local customer smartphone lock screens and active map locations.</p>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: 0 }}>Offers</h3>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -222,7 +225,7 @@ export const MenuManager: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#555', marginBottom: '6px', letterSpacing: '0.5px' }}>OFFER TITLE</label>
-                  <input required type="text" value={offerTitle} onChange={(e) => setOfferTitle(e.target.value)} placeholder="e.g. 20% off all woodfired pizzas" style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', boxSizing: 'border-box' }} />
+                  <input required type="text" value={offerTitle} onChange={(e) => setOfferTitle(e.target.value)} placeholder="e.g. 10% off coffee today" style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', boxSizing: 'border-box' }} />
                 </div>
 
                 <div>
@@ -234,7 +237,7 @@ export const MenuManager: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#555', marginBottom: '6px', letterSpacing: '0.5px' }}>ITEM DESCRIPTION</label>
-                  <textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ingredients..." style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'none' }} />
+                  <textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details..." style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'none' }} />
                 </div>
 
                 <div>
@@ -257,7 +260,7 @@ export const MenuManager: React.FC = () => {
                   disabled={isSaving || isUploading}
                   style={{ marginTop: '4px', width: '100%', padding: '14px', borderRadius: '6px', backgroundColor: '#FF6B6B', color: '#fff', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}
                 >
-                  {isSaving ? 'Deploying Deal Alert Matrix...' : 'Publish Flash Offer Live'}
+                  {isSaving ? 'Publishing...' : 'Publish Offer'}
                 </button>
               </div>
 
@@ -292,7 +295,7 @@ export const MenuManager: React.FC = () => {
           ) : (
             <div style={{ textAlign: 'center', maxWidth: '360px' }}>
               <p style={{ margin: 0, fontSize: '14px', color: '#444', fontWeight: 500, lineHeight: '1.6' }}>
-                No active promotional campaign live right now. Open the editor panel above to instantly drop an offer pin onto the consumer discovery map.
+                No active promotional campaign live right now.
               </p>
             </div>
           )}
