@@ -14,6 +14,7 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
   const [postcode, setPostcode] = useState(initialData?.postcode || '');
   const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [geocodingError, setGeocodingError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -24,7 +25,35 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setGeocodingError(null);
+
+    let latitude = initialData?.latitude || null;
+    let longitude = initialData?.longitude || null;
+
+    try {
+      // Construct a clean, unified lookup string for Google Maps
+      const fullAddress = `${address1}, ${town}, ${postcode}, UK`;
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+      if (apiKey) {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`
+        );
+        const data = await response.json();
+
+        if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
+          latitude = data.results[0].geometry.location.lat;
+          longitude = data.results[0].geometry.location.lng;
+        } else {
+          console.warn('Google Geocoding API failed or returned empty results:', data.status);
+          setGeocodingError('Could not verify address location coordinates. Saving with default parameters.');
+        }
+      }
+    } catch (err) {
+      console.error('Ecosystem geocoding lookup exception:', err);
+    }
     
+    // Pass everything up cleanly to the submission handler
     await onSubmit({
       name,
       cuisine_type: cuisineType,
@@ -32,6 +61,8 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
       address1,
       town,
       postcode,
+      latitude,
+      longitude,
       insuranceFile,
       insurance_provided: !!insuranceFile || !!initialData?.insurance_provided,
     });
@@ -49,6 +80,12 @@ export default function VenueDetailsForm({ initialData, onSubmit }: VenueDetails
           Provide your trading credentials and public liability cover to unlock map features.
         </p>
       </div>
+
+      {geocodingError && (
+        <div style={{ padding: '12px', backgroundColor: 'rgba(231, 76, 60, 0.1)', border: '1px solid #e74c3c', borderRadius: '8px', color: '#e74c3c', fontSize: '14px', textAlign: 'center' }}>
+          ⚠️ {geocodingError}
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
