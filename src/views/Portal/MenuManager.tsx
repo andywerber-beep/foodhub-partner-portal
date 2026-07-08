@@ -15,6 +15,10 @@ export const MenuManager: React.FC = () => {
   const [price, setPrice] = useState('0.00');
   const [description, setDescription] = useState('');
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  
+  // New state to manage the chosen live duration for the promotion
+  const [durationHours, setDurationHours] = useState<number>(3);
+  const [displayExpiryString, setDisplayExpiryString] = useState<string>('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,12 +36,12 @@ export const MenuManager: React.FC = () => {
           setWebsiteUrl(partnerData.website_url);
         }
 
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        // Fetch the active offer checking if it hasn't expired relative to database time tracking
         const { data: offerData } = await supabase
           .from('offers')
           .select('*')
           .eq('venue_id', partner.id)
-          .gt('created_at', twentyFourHoursAgo)
+          .eq('is_active', true)
           .maybeSingle();
 
         if (offerData) {
@@ -46,6 +50,13 @@ export const MenuManager: React.FC = () => {
           setPrice(offerData.discount_price?.toString() || '0.00');
           setDescription(offerData.description || '');
           setMediaUrl(offerData.image_url || null);
+          
+          if (offerData.expires_at) {
+            const expiryDate = new Date(offerData.expires_at);
+            setDisplayExpiryString(`EXPIRES AT ${expiryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+          } else {
+            setDisplayExpiryString('ACTIVE PROMOTION');
+          }
         }
       } catch (err) {
         console.error('Error fetching layout routing settings:', err);
@@ -103,7 +114,12 @@ export const MenuManager: React.FC = () => {
 
     setIsSaving(true);
     try {
+      // Clean sweep of previous records to ensure only one clean current deal exists
       await supabase.from('offers').delete().eq('venue_id', partner.id);
+
+      // Math parsing to derive the absolute expiration point in time
+      const currentTime = new Date();
+      const expirationTime = new Date(currentTime.getTime() + durationHours * 60 * 60 * 1000);
 
       const { error } = await supabase.from('offers').insert([{
         venue_id: partner.id,
@@ -114,11 +130,13 @@ export const MenuManager: React.FC = () => {
         discount_type: 'Flash Promotion',
         is_active: true,
         proximity_ping: true,
-        created_at: new Date().toISOString()
+        created_at: currentTime.toISOString(),
+        expires_at: expirationTime.toISOString()
       }]);
 
       if (error) throw error;
 
+      setDisplayExpiryString(`EXPIRES AT ${expirationTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
       setActiveOfferExists(true);
       setShowDrawer(false);
       alert('Offer published live successfully!');
@@ -135,6 +153,7 @@ export const MenuManager: React.FC = () => {
     if (!confirm('Withdraw this offer immediately?')) return;
 
     try {
+      // Turn it off instantly inside the DB table
       await supabase.from('offers').delete().eq('venue_id', partner.id);
       
       setActiveOfferExists(false);
@@ -142,6 +161,8 @@ export const MenuManager: React.FC = () => {
       setPrice('0.00');
       setDescription('');
       setMediaUrl(null);
+      setDurationHours(3);
+      setDisplayExpiryString('');
       setShowDrawer(false);
       alert('Offer withdrawn completely.');
     } catch (err) {
@@ -232,6 +253,22 @@ export const MenuManager: React.FC = () => {
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#555', marginBottom: '6px', letterSpacing: '0.5px' }}>PRICE (£)</label>
                   <input required type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', boxSizing: 'border-box' }} />
                 </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#555', marginBottom: '6px', letterSpacing: '0.5px' }}>PROMOTION RUNTIME WINDOW</label>
+                  <select 
+                    value={durationHours} 
+                    onChange={(e) => setDurationHours(parseInt(e.target.value))}
+                    style={{ width: '100%', padding: '12px', background: '#121212', border: '1px solid #262626', borderRadius: '6px', color: '#fff', boxSizing: 'border-box', cursor: 'pointer' }}
+                  >
+                    <option value={1}>Standard Flash Run (1 Hour)</option>
+                    <option value={2}>Standard Flash Run (2 Hours)</option>
+                    <option value={3}>Standard Flash Run (3 Hours - Recommended)</option>
+                    <option value={4}>Extended Special (4 Hours)</option>
+                    <option value={6}>Extended Special (6 Hours)</option>
+                    <option value={12}>Full Shift Run (12 Hours)</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -285,7 +322,7 @@ export const MenuManager: React.FC = () => {
               {mediaUrl && <img src={mediaUrl} alt="Offer Visual" style={{ width: '90px', height: '90px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #222' }} />}
               <div>
                 <span style={{ fontSize: '10px', fontWeight: 700, color: '#4CD137', background: 'rgba(76,209,55,0.1)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginBottom: '6px' }}>
-                  ACTIVE FOR 24 HOURS
+                  {displayExpiryString}
                 </span>
                 <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: 800, color: '#fff' }}>{offerTitle}</h4>
                 <div style={{ fontSize: '16px', fontWeight: 700, color: '#FF6B6B', marginBottom: '4px' }}>£{parseFloat(price).toFixed(2)}</div>
