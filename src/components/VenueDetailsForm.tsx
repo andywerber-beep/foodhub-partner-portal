@@ -72,7 +72,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
         status: 'compliance_pending',
       };
 
-      // 2. Save directly to Supabase if partnerId exists
+      // 2. Direct Supabase update if partnerId exists
       if (partnerId) {
         const { error: dbError } = await supabase
           .from('partners')
@@ -82,7 +82,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
         if (dbError) throw dbError;
       }
 
-      // 3. Trigger parent callbacks to advance the onboarding flow
+      // 3. Trigger parent callbacks
       if (onSubmit) {
         await onSubmit(completeData);
       }

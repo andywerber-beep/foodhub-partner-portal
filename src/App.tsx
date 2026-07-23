@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { PartnerProvider } from './context/PartnerContext';
 import DetailsPendingView from './views/Onboarding/DetailsPendingView';
-import VenueDetailsForm from './components/VenueDetailsForm';
 import { ActiveDashboardView } from './views/Portal/ActiveDashboardView';
 import { UnderReviewView } from './views/Review/UnderReviewView';
 import { WelcomeView } from './views/Onboarding/WelcomeView';
@@ -100,13 +99,6 @@ export default function App() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleDetailsSubmit = async (_formData: any) => {
-    if (!session?.user?.id) return;
-    // VenueDetailsForm updates Supabase directly including lat/lng.
-    // Re-fetch the updated partner status to advance view.
-    await fetchVenueStatus(session.user.id);
   };
 
   if (loading) {
@@ -221,7 +213,12 @@ export default function App() {
         {(() => {
           switch (status) {
             case 'details_pending':
-              return <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} partnerId={session.user.id} />;
+              return (
+                <DetailsPendingView 
+                  partnerId={session.user.id} 
+                  onStepComplete={() => fetchVenueStatus(session.user.id)} 
+                />
+              );
             case 'under_review':
               return <UnderReviewView />;
             case 'approved':

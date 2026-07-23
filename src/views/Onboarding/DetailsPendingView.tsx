@@ -45,25 +45,17 @@ export default function DetailsPendingView({ partnerId, onStepComplete }: Detail
           cuisine_type: formData.cuisine_type,
           tel_number: formData.tel_number,
           address1: formData.address1,
+          address2: formData.address2,
           town: formData.town,
           postcode: formData.postcode,
-          insurance_provided: formData.insurance_provided,
+          email: formData.email,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
           status: 'compliance_pending'
         })
         .eq('id', partnerId);
 
       if (updateError) throw updateError;
-
-      if (formData.insuranceFile) {
-        const fileExt = formData.insuranceFile.name.split('.').pop();
-        const filePath = `${partnerId}/insurance-${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('insurance-policies')
-          .upload(filePath, formData.insuranceFile, { upsert: true });
-
-        if (uploadError) throw uploadError;
-      }
 
       onStepComplete();
     } catch (err) {
@@ -74,21 +66,22 @@ export default function DetailsPendingView({ partnerId, onStepComplete }: Detail
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p className="text-gray-500 animate-pulse font-medium">Retrieving venue onboarding profile status...</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Retrieving venue onboarding profile status...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex flex-col justify-center">
-      <header className="max-w-xl mx-auto w-full text-center mb-4">
-        <p className="text-sm font-medium text-gray-500">
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px 0' }}>
+      <header style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
           Please complete your partner venue profile to unlock compliance verification.
         </p>
       </header>
 
       <VenueDetailsForm 
+        partnerId={partnerId}
         initialData={profileData} 
         onSubmit={handleSubmit} 
       />
