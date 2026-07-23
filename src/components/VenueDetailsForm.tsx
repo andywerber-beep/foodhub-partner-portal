@@ -38,7 +38,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
     setErrorMessage(null);
 
     try {
-      // 1. Geocode address via serverless endpoint
+      // 1. Fetch location coordinates from Vercel Geocoding API
       const geocodeResponse = await fetch('/api/geocode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,7 +54,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
       if (!geocodeResponse.ok || !geocodeData.latitude || !geocodeData.longitude) {
         throw new Error(
           geocodeData.error ||
-            'Could not verify venue location coordinates from the provided postcode and address. Please check your address details.'
+            'Could not verify venue location coordinates. Please check your address and postcode.'
         );
       }
 
@@ -72,7 +72,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
         status: 'compliance_pending',
       };
 
-      // 2. Direct Supabase update if partnerId is provided
+      // 2. Save directly to Supabase if partnerId exists
       if (partnerId) {
         const { error: dbError } = await supabase
           .from('partners')
@@ -82,7 +82,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
         if (dbError) throw dbError;
       }
 
-      // 3. Fire parent callbacks
+      // 3. Trigger parent callbacks to advance the onboarding flow
       if (onSubmit) {
         await onSubmit(completeData);
       }
@@ -91,48 +91,39 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
       }
     } catch (err: any) {
       console.error('Form submission error:', err);
-      setErrorMessage(err.message || 'An error occurred while saving details.');
+      setErrorMessage(err.message || 'An error occurred while saving venue details.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '0 16px' }}>
-      <form
-        onSubmit={handleFormSubmit}
-        style={{
-          backgroundColor: '#181818',
-          border: '1px solid var(--border-color, #2a2a2a)',
-          borderRadius: '16px',
-          padding: '32px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-        }}
-      >
-        <h2 style={{ color: '#ffffff', fontSize: '24px', fontWeight: 700, margin: '0 0 8px 0' }}>
+    <div className="block-card" style={{ maxWidth: '600px', margin: '0 auto', padding: '32px' }}>
+      <header style={{ marginBottom: '24px' }}>
+        <h2 style={{ color: 'var(--text-primary, #ffffff)', fontSize: '24px', fontWeight: 700, margin: '0 0 8px 0' }}>
           Venue Details
         </h2>
+        <p style={{ color: 'var(--text-secondary, #a0a0a0)', fontSize: '14px', margin: 0 }}>
+          Please complete your venue contact and location details.
+        </p>
+      </header>
 
+      <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {errorMessage && (
-          <div
-            style={{
-              backgroundColor: 'rgba(255, 77, 77, 0.1)',
-              border: '1px solid var(--error-color, #ff4d4d)',
-              color: '#ff4d4d',
-              padding: '12px',
-              borderRadius: '8px',
-              fontSize: '14px',
-            }}
-          >
+          <div style={{
+            backgroundColor: 'rgba(255, 77, 77, 0.1)',
+            border: '1px solid var(--error-color, #ff4d4d)',
+            color: 'var(--error-color, #ff4d4d)',
+            padding: '12px',
+            borderRadius: '8px',
+            fontSize: '14px'
+          }}>
             {errorMessage}
           </div>
         )}
 
         <div>
-          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
             Venue Name
           </label>
           <input
@@ -142,21 +133,12 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
             value={formData.name}
             onChange={handleChange}
             placeholder="e.g. Malt"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color, #333)',
-              backgroundColor: '#101010',
-              color: '#fff',
-              fontSize: '15px',
-              boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
             Cuisine Type
           </label>
           <input
@@ -166,21 +148,12 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
             value={formData.cuisine_type}
             onChange={handleChange}
             placeholder="e.g. Vegetarian"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color, #333)',
-              backgroundColor: '#101010',
-              color: '#fff',
-              fontSize: '15px',
-              boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
             Phone Number
           </label>
           <input
@@ -190,21 +163,12 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
             value={formData.tel_number}
             onChange={handleChange}
             placeholder="e.g. 01903 123456"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color, #333)',
-              backgroundColor: '#101010',
-              color: '#fff',
-              fontSize: '15px',
-              boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
             Address Line 1
           </label>
           <input
@@ -214,21 +178,12 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
             value={formData.address1}
             onChange={handleChange}
             placeholder="e.g. 167 Montague Street"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color, #333)',
-              backgroundColor: '#101010',
-              color: '#fff',
-              fontSize: '15px',
-              boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
             Address Line 2 (Optional)
           </label>
           <input
@@ -236,23 +191,14 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
             name="address2"
             value={formData.address2}
             onChange={handleChange}
-            placeholder="Building, Suite, etc."
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color, #333)',
-              backgroundColor: '#101010',
-              color: '#fff',
-              fontSize: '15px',
-              boxSizing: 'border-box',
-            }}
+            placeholder="Suite, Floor, etc."
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
           />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
               Town / City
             </label>
             <input
@@ -262,21 +208,12 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
               value={formData.town}
               onChange={handleChange}
               placeholder="e.g. Worthing"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-color, #333)',
-                backgroundColor: '#101010',
-                color: '#fff',
-                fontSize: '15px',
-                boxSizing: 'border-box',
-              }}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
               Postcode
             </label>
             <input
@@ -286,22 +223,13 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
               value={formData.postcode}
               onChange={handleChange}
               placeholder="e.g. BN11 3BZ"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-color, #333)',
-                backgroundColor: '#101010',
-                color: '#fff',
-                fontSize: '15px',
-                boxSizing: 'border-box',
-              }}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
             />
           </div>
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
             Email Address
           </label>
           <input
@@ -311,16 +239,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
             value={formData.email}
             onChange={handleChange}
             placeholder="venue@example.com"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color, #333)',
-              backgroundColor: '#101010',
-              color: '#fff',
-              fontSize: '15px',
-              boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#181818', color: '#fff', fontSize: '15px' }}
           />
         </div>
 
@@ -329,7 +248,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
           disabled={loading}
           style={{
             width: '100%',
-            backgroundColor: loading ? '#444' : 'var(--coral-accent, #ff5a5f)',
+            backgroundColor: loading ? 'var(--border-color)' : 'var(--coral-accent)',
             color: '#fff',
             border: 'none',
             borderRadius: '12px',
@@ -341,7 +260,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
             marginTop: '12px',
           }}
         >
-          {loading ? 'Verifying Address & Saving...' : 'Save & Continue'}
+          {loading ? 'Verifying Location & Saving...' : 'Save & Continue'}
         </button>
       </form>
     </div>
