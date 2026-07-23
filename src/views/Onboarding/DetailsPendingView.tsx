@@ -51,7 +51,7 @@ export default function DetailsPendingView({ partnerId, onStepComplete }: Detail
           email: formData.email,
           latitude: formData.latitude,
           longitude: formData.longitude,
-          status: 'compliance_pending'
+          status: 'under_review'
         })
         .eq('id', partnerId);
 
