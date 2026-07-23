@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 
 interface VenueDetailsFormProps {
   partnerId?: string;
@@ -9,7 +8,6 @@ interface VenueDetailsFormProps {
 }
 
 export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
-  partnerId,
   initialData,
   onSubmit,
   onSuccess,
@@ -38,7 +36,7 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
     setErrorMessage(null);
 
     try {
-      // 1. Fetch location coordinates from Vercel Geocoding API
+      // 1. Geocode venue address to fetch lat/lng for proximity pings
       const geocodeResponse = await fetch('/api/geocode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,31 +56,14 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
         );
       }
 
+      // Combine form input with fetched coordinates
       const completeData = {
-        name: formData.name,
-        cuisine_type: formData.cuisine_type,
-        tel_number: formData.tel_number,
-        address1: formData.address1,
-        address2: formData.address2,
-        town: formData.town,
-        postcode: formData.postcode,
-        email: formData.email,
+        ...formData,
         latitude: geocodeData.latitude,
         longitude: geocodeData.longitude,
-        status: 'compliance_pending',
       };
 
-      // 2. Direct Supabase update if partnerId exists
-      if (partnerId) {
-        const { error: dbError } = await supabase
-          .from('partners')
-          .update(completeData)
-          .eq('id', partnerId);
-
-        if (dbError) throw dbError;
-      }
-
-      // 3. Trigger parent callbacks
+      // 2. Hand off to parent submit handler (DetailsPendingView)
       if (onSubmit) {
         await onSubmit(completeData);
       }
