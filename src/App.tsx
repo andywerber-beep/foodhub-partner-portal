@@ -5,7 +5,7 @@ import DetailsPendingView from './views/Onboarding/DetailsPendingView';
 import VenueDetailsForm from './components/VenueDetailsForm';
 import { ActiveDashboardView } from './views/Portal/ActiveDashboardView';
 import { UnderReviewView } from './views/Review/UnderReviewView';
-import { WelcomeView } from './views/Onboarding/WelcomeView'; // Corrected named import statement
+import { WelcomeView } from './views/Onboarding/WelcomeView';
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -102,44 +102,11 @@ export default function App() {
     }
   };
 
-  const handleDetailsSubmit = async (formData: any) => {
+  const handleDetailsSubmit = async (_formData: any) => {
     if (!session?.user?.id) return;
-    
-    try {
-      let insuranceUploaded = formData.insurance_provided;
-
-      if (formData.insuranceFile) {
-        const fileExtension = formData.insuranceFile.name.split('.').pop();
-        const filePath = `${session.user.id}/insurance-${Date.now()}.${fileExtension}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('compliance-docs')
-          .upload(filePath, formData.insuranceFile, { upsert: true });
-
-        if (uploadError) throw uploadError;
-        insuranceUploaded = true;
-      }
-
-      const { error: updateError } = await supabase
-        .from('partners')
-        .update({
-          name: formData.name,
-          cuisine_type: formData.cuisine_type,
-          tel_number: formData.tel_number,
-          address1: formData.address1,
-          town: formData.town,
-          postcode: formData.postcode,
-          insurance_provided: insuranceUploaded,
-          status: 'under_review'
-        })
-        .eq('id', session.user.id);
-
-      if (updateError) throw updateError;
-      
-      await fetchVenueStatus(session.user.id);
-    } catch (error: any) {
-      alert(error.message || 'Error updating partner credentials profile.');
-    }
+    // VenueDetailsForm updates Supabase directly including lat/lng.
+    // Re-fetch the updated partner status to advance view.
+    await fetchVenueStatus(session.user.id);
   };
 
   if (loading) {
@@ -248,14 +215,13 @@ export default function App() {
     );
   }
 
-  // Wrap all authenticated screens inside PartnerProvider context wrapper to prevent runtime layout exceptions
   return (
     <PartnerProvider>
       <div className="app-container">
         {(() => {
           switch (status) {
             case 'details_pending':
-              return <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} />;
+              return <VenueDetailsForm initialData={initialData} onSubmit={handleDetailsSubmit} partnerId={session.user.id} />;
             case 'under_review':
               return <UnderReviewView />;
             case 'approved':
