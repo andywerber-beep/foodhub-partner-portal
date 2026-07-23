@@ -98,120 +98,253 @@ export const VenueDetailsForm: React.FC<VenueDetailsFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-4 max-w-xl mx-auto p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Venue Details</h2>
-
-      {errorMessage && (
-        <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm border border-red-200">
-          {errorMessage}
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Venue Name</label>
-        <input
-          type="text"
-          name="name"
-          required
-          value={formData.name}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Cuisine Type</label>
-        <input
-          type="text"
-          name="cuisine_type"
-          required
-          value={formData.cuisine_type}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-        <input
-          type="tel"
-          name="tel_number"
-          required
-          value={formData.tel_number}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
-        <input
-          type="text"
-          name="address1"
-          required
-          value={formData.address1}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
-        <input
-          type="text"
-          name="address2"
-          value={formData.address2}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Town / City</label>
-          <input
-            type="text"
-            name="town"
-            required
-            value={formData.town}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Postcode</label>
-          <input
-            type="text"
-            name="postcode"
-            required
-            value={formData.postcode}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Email Address</label>
-        <input
-          type="email"
-          name="email"
-          required
-          value={formData.email}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-black"
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition disabled:opacity-50 mt-6"
+    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '0 16px' }}>
+      <form
+        onSubmit={handleFormSubmit}
+        style={{
+          backgroundColor: '#181818',
+          border: '1px solid var(--border-color, #2a2a2a)',
+          borderRadius: '16px',
+          padding: '32px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        }}
       >
-        {loading ? 'Verifying Address & Saving...' : 'Save & Continue'}
-      </button>
-    </form>
+        <h2 style={{ color: '#ffffff', fontSize: '24px', fontWeight: 700, margin: '0 0 8px 0' }}>
+          Venue Details
+        </h2>
+
+        {errorMessage && (
+          <div
+            style={{
+              backgroundColor: 'rgba(255, 77, 77, 0.1)',
+              border: '1px solid var(--error-color, #ff4d4d)',
+              color: '#ff4d4d',
+              padding: '12px',
+              borderRadius: '8px',
+              fontSize: '14px',
+            }}
+          >
+            {errorMessage}
+          </div>
+        )}
+
+        <div>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            Venue Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            required
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="e.g. Malt"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #333)',
+              backgroundColor: '#101010',
+              color: '#fff',
+              fontSize: '15px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            Cuisine Type
+          </label>
+          <input
+            type="text"
+            name="cuisine_type"
+            required
+            value={formData.cuisine_type}
+            onChange={handleChange}
+            placeholder="e.g. Vegetarian"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #333)',
+              backgroundColor: '#101010',
+              color: '#fff',
+              fontSize: '15px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            name="tel_number"
+            required
+            value={formData.tel_number}
+            onChange={handleChange}
+            placeholder="e.g. 01903 123456"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #333)',
+              backgroundColor: '#101010',
+              color: '#fff',
+              fontSize: '15px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            Address Line 1
+          </label>
+          <input
+            type="text"
+            name="address1"
+            required
+            value={formData.address1}
+            onChange={handleChange}
+            placeholder="e.g. 167 Montague Street"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #333)',
+              backgroundColor: '#101010',
+              color: '#fff',
+              fontSize: '15px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            Address Line 2 (Optional)
+          </label>
+          <input
+            type="text"
+            name="address2"
+            value={formData.address2}
+            onChange={handleChange}
+            placeholder="Building, Suite, etc."
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #333)',
+              backgroundColor: '#101010',
+              color: '#fff',
+              fontSize: '15px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+              Town / City
+            </label>
+            <input
+              type="text"
+              name="town"
+              required
+              value={formData.town}
+              onChange={handleChange}
+              placeholder="e.g. Worthing"
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color, #333)',
+                backgroundColor: '#101010',
+                color: '#fff',
+                fontSize: '15px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+              Postcode
+            </label>
+            <input
+              type="text"
+              name="postcode"
+              required
+              value={formData.postcode}
+              onChange={handleChange}
+              placeholder="e.g. BN11 3BZ"
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color, #333)',
+                backgroundColor: '#101010',
+                color: '#fff',
+                fontSize: '15px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-secondary, #a0a0a0)', marginBottom: '6px', fontWeight: 500 }}>
+            Email Address
+          </label>
+          <input
+            type="email"
+            name="email"
+            required
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="venue@example.com"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #333)',
+              backgroundColor: '#101010',
+              color: '#fff',
+              fontSize: '15px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: '100%',
+            backgroundColor: loading ? '#444' : 'var(--coral-accent, #ff5a5f)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: 600,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            transition: 'background-color 0.2s',
+            marginTop: '12px',
+          }}
+        >
+          {loading ? 'Verifying Address & Saving...' : 'Save & Continue'}
+        </button>
+      </form>
+    </div>
   );
 };
 
