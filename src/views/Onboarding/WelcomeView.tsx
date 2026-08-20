@@ -53,7 +53,7 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({
           color: '#ffffff',
           letterSpacing: '-0.5px'
         }}>
-          FoodHub
+          TAPDINE
         </h1>
       </div>
 

@@ -115,7 +115,7 @@ export default function App() {
       <div className="app-container">
         <header style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{ color: 'var(--text-primary)', fontSize: '36px', marginBottom: '8px', fontWeight: 800 }}>
-            FoodHub
+            TAPDINE
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
             {isSignUp ? 'Create a partner venue account' : 'Please sign in to access your partner workspace.'}

@@ -37,7 +37,7 @@ export const AgreementView: React.FC = () => {
     <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
       <header style={{ textAlign: 'center', marginBottom: '32px' }}>
         <h1 style={{ fontSize: '32px', color: 'var(--coral-accent, #FF6B6B)', letterSpacing: '-0.05em', fontWeight: 700, marginBottom: '16px' }}>
-          FOODHUB
+          TAPDINE
         </h1>
         <h2 style={{ color: '#fff', fontSize: '28px', margin: '0 0 8px 0', fontWeight: 700 }}>
           Merchant Agreement

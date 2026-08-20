@@ -1,73 +1,56 @@
-# React + TypeScript + Vite
+# TAPDINE Partner Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Official partner venue portal for the **TAPDINE** local dining discovery platform.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Overview
 
-## React Compiler
+The TAPDINE Partner Portal allows partner venues to manage digital menu uploads, administer flash promotional offers, configure geolocation mapping settings, and monitor point-of-sale transaction ledgers.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Sole Focus:** Designed solely and exclusively for partner venues (no employer/employee side).
+* **Live Discovery:** Displays active venue locations and flash offers on interactive customer discovery maps.
+* **Proximity Pings:** Automated notifications sent to nearby walking users when flash deals are active.
+* **Direct Marketplace Ledger:** Clear transaction tracking with automated 10% marketplace commission deduction.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* **Framework:** React 19 + TypeScript + Vite
+* **Database & Auth:** Supabase (`@supabase/supabase-js`)
+* **Payments:** Stripe
+* **Mapping:** Google Maps JavaScript API & Geocoding API
+* **Edge Functions:** Supabase Functions (Deno) for proximity alerts
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Database Architecture (`partners` table)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `text` / `uuid` | Primary Key (Auth UID) |
+| `name` | `text` | Venue trade name |
+| `cuisine_type` | `text` | Primary cuisine category |
+| `status` | `text` | `details_pending` \| `compliance_pending` \| `under_review` \| `approved` \| `active` |
+| `commission_rate` | `numeric` | Platform rate (10.0%) |
+| `id_provided` | `boolean` | Owner ID verification status |
+| `hygiene_provided`| `boolean` | Food hygiene validation status |
+| `hygiene_expiry` | `date` | Hygiene certificate expiry date |
+| `insurance_provided`| `boolean` | Public liability policy status |
+| `insurance_expiry`| `date` | Insurance policy expiry date |
+| `address1` | `text` | Primary street address |
+| `address2` | `text` | Secondary address / suite |
+| `town` | `text` | Town / City |
+| `postcode` | `text` | UK postal code |
+| `tel_number` | `text` | Venue telephone contact |
+| `email` | `text` | Venue account email |
+| `website_url` | `text` | Linked digital menu / website |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Getting Started
+
+### 1. Install Dependencies
+```bash
+npm install
